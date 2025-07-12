@@ -93,8 +93,8 @@
     <header class="bg-white shadow-sm px-6 py-4">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800">Historique</h1>
-                <p class="text-sm text-gray-600">Bienvenue, <span class="font-semibold">Amadou Diop</span></p>
+                <h1 class="text-3xl font-bold text-gray-800">Mon compte</h1>
+                <p class="text-sm text-gray-600">Bienvenue, <span class="font-semibold"><?php echo isset($user) ? htmlspecialchars($user['prenom'] . ' ' . $user['nom']) : 'Utilisateur'; ?></span></p>
             </div>
             <div class="flex items-center space-x-4">
                 <div class="flex items-center space-x-2 text-sm text-gray-600">
@@ -114,9 +114,13 @@
                 </a>
                 <div class="flex items-center space-x-2">
                     <div class="w-8 h-8 rounded-full bg-maxitOrange flex items-center justify-center">
-                        <span class="text-white text-sm font-medium">AD</span>
+                        <span class="text-white text-sm font-medium">
+                            <?php echo isset($user) ? strtoupper(substr($user['prenom'], 0, 1) . substr($user['nom'], 0, 1)) : 'U'; ?>
+                        </span>
                     </div>
-                    <span class="text-sm font-medium text-gray-700">Amadou Diop</span>
+                    <span class="text-sm font-medium text-gray-700">
+                        <?php echo isset($user) ? htmlspecialchars($user['prenom'] . ' ' . $user['nom']) : 'Utilisateur'; ?>
+                    </span>
                 </div>
             </div>
         </div>
@@ -124,12 +128,12 @@
 
     <!-- Dashboard Content -->
     <main class="p-0 pt-8 w-full">
-        <!-- Solde global -->
+        <!-- Solde de l'utilisateur connecté -->
         <div id="soldeSection" class="bg-gradient-to-r from-maxitOrange to-maxitOrangeLight rounded-xl shadow-maxit p-6 mb-8 flex items-center justify-between">
             <div>
-                <h3 class="text-lg font-semibold text-white mb-1">Solde total</h3>
+                <h3 class="text-lg font-semibold text-white mb-1">Mon solde</h3>
                 <div id="soldeMontant" class="text-3xl font-bold text-white">
-                    <?php echo isset($soldeTotal) ? number_format($soldeTotal, 0, ',', ' ') . ' FCFA' : '0 FCFA'; ?>
+                    <?php echo isset($solde) ? number_format($solde, 0, ',', ' ') . ' FCFA' : '0 FCFA'; ?>
                 </div>
                 <p class="text-xs text-orange-100 mt-1">Mis à jour le <?php echo date('d/m/Y à H:i'); ?></p>
             </div>
@@ -254,5 +258,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-</body>
-</html>

@@ -16,8 +16,9 @@ $routes = [
     ]
   ],
   '/compte' => ['controller' => CompteController::class, 'method' => 'show'],
+  '/compte/solde' => ['controller' => CompteController::class, 'method' => 'solde'],
   '/logout' => ['controller' => SecurityController::class, 'method' => 'destroy'],
-  
+
 ];
 
 return $routes;

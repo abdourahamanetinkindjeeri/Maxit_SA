@@ -10,7 +10,10 @@ $dotenv->load();
 define('DSN', $_ENV['DSN'] ?? 'mysql:host=localhost;dbname=maxitsa');
 define('USER', $_ENV['DB_USER'] ?? 'root');
 define('PASSWORD', $_ENV['DB_PASSWORD'] ?? '');
-define('SID', $_ENV['SID'] ?? '');
+define('TWILIO_SID', $_ENV['TWILIO_SID'] ?? '');
 define('TOKEN', $_ENV['TOKEN'] ?? '');
 define('PHONE', $_ENV['PHONE'] ?? '');
-define('BASE_URL', $_ENV['BASE_URL'] ?? 'http://localhost:9080/');
+define('BASE_URL', $_ENV['BASE_URL'] ?? 'http://localhost:8080/');
+define('MESSAGING_SID', $_ENV['MESSAGING_SID']);
+
+// dump_die(SID);

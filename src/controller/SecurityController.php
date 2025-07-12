@@ -6,7 +6,6 @@ use App\Config\Abstract\AbstractController;
 use App\Entity\Compte;
 use App\Entity\Utilisateur;
 use App\Config\App;
-use App\Service\SMSService;
 
 use function App\Config\dump_die;
 
@@ -183,16 +182,16 @@ class SecurityController extends AbstractController
 
     $user = $service->inscrire($u, $c);
 
+
     if ($user) {
-      // Envoi du SMS de bienvenue
       try {
-        $smsService = new SMSService();
-        $smsService->sendWelcomeSMS($donnees['telephone'], $donnees['prenom']);
+        $messagerie = new \App\Config\Messagerie();
+        $message = 'Bonjour ' . $donnees['prenom'] . '! Bienvenue sur Maxitsa. Votre compte a été créé avec succès. Solde initial: ' . $c->getMontant() . ' FCFA.';
+        // dump_die($messagerie->sendMessage($donnees['telephone'], $message));
+        $messagerie->sendMessage($donnees['telephone'], $message);
       } catch (\Exception $e) {
         error_log('Erreur lors de l\'envoi du SMS de bienvenue: ' . $e->getMessage());
-        // On continue même si le SMS échoue
       }
-
       header('Location:' . BASE_URL . 'compte');
     } else {
       $this->session->set('errors', ['registration' => ["Échec de l'inscription. Veuillez réessayer."]]);

@@ -12,7 +12,6 @@ class CompteRepository extends AbstractRepository
 {
 
 
-  //    private \PDO $db;
 
   private static $instance = null;
   public static function getInstance()
@@ -100,6 +99,60 @@ class CompteRepository extends AbstractRepository
 
 
     return Utilisateur::toObject($data) ?? null;
+  }
+
+  /**
+   * Récupère le solde d'un utilisateur par son ID
+   */
+  public function getSoldeByUserId(int $userId): ?float
+  {
+    $sql = "SELECT montant FROM {$this->table} WHERE client_id = :user_id";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['user_id' => $userId]);
+
+    $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    return $result ? (float) $result['montant'] : null;
+  }
+
+  /**
+   * Récupère le compte complet d'un utilisateur avec ses informations
+   */
+  public function getCompteByUserId(int $userId): ?Compte
+  {
+    $sql = "SELECT c.*, u.nom, u.prenom, u.login 
+            FROM {$this->table} c 
+            INNER JOIN utilisateur u ON c.client_id = u.id 
+            WHERE c.client_id = :user_id";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['user_id' => $userId]);
+
+    $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    if ($data === false) {
+      return null;
+    }
+
+    return Compte::toObject($data);
+  }
+
+  /**
+   * Récupère tous les comptes avec les informations des utilisateurs
+   */
+  public function getAllComptesWithUsers(): array
+  {
+    $sql = "SELECT c.*, u.nom, u.prenom, u.login 
+            FROM {$this->table} c 
+            INNER JOIN utilisateur u ON c.client_id = u.id 
+            ORDER BY c.id";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute();
+
+    $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+    return array_map(fn($row) => Compte::toObject($row), $results);
   }
 
   public function insertCompte(Compte $compte): bool
