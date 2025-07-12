@@ -3,12 +3,10 @@
 namespace App\Controller;
 
 use App\Config\Abstract\AbstractController;
-use App\Config\Validator;
 use App\Entity\Compte;
 use App\Entity\Utilisateur;
-use App\Service\SecurityService;
 use App\Config\App;
-use Twilio\Rest\Client;
+use App\Service\SMSService;
 
 use function App\Config\dump_die;
 
@@ -49,7 +47,9 @@ class SecurityController extends AbstractController
 
   public function destroy(): void
   {
-    // TODO: Implement destroy() method.
+    $this->session->unset('user');
+    header('Location:' . BASE_URL . 'login');
+    exit();
   }
 
   public function store(): void
@@ -185,33 +185,18 @@ class SecurityController extends AbstractController
 
     if ($user) {
       // Envoi du SMS de bienvenue
-      // $this->sendWelcomeSMS($donnees['telephone']);
+      try {
+        $smsService = new SMSService();
+        $smsService->sendWelcomeSMS($donnees['telephone'], $donnees['prenom']);
+      } catch (\Exception $e) {
+        error_log('Erreur lors de l\'envoi du SMS de bienvenue: ' . $e->getMessage());
+        // On continue même si le SMS échoue
+      }
+
       header('Location:' . BASE_URL . 'compte');
     } else {
       $this->session->set('errors', ['registration' => ["Échec de l'inscription. Veuillez réessayer."]]);
       parent::renderHTML('utilisateur/inscription.html.php');
-    }
-  }
-
-
-
-  private function sendWelcomeSMS(string $phoneNumber): void
-  {
-    $sid = getenv('TWILIO_SID');
-    $token = getenv('TWILIO_AUTH_TOKEN');
-    $from = getenv('TWILIO_PHONE_NUMBER');
-
-    try {
-      $twilio = new Client($sid, $token);
-      $twilio->messages->create(
-        $phoneNumber,
-        [
-          'from' => $from,
-          'body' => 'Bienvenue! Votre compte a été créé avec succès.'
-        ]
-      );
-    } catch (\Exception $e) {
-      error_log('Erreur SMS Twilio : ' . $e->getMessage());
     }
   }
 }
