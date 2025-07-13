@@ -7,7 +7,7 @@ use App\Config\App;
 use App\Entity\Utilisateur;
 use \PDO;
 use function App\Config\dump;
-use function App\Config\dump_die;
+
 
 class UtilisateurRepository extends AbstractRepository
 {

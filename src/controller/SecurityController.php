@@ -7,6 +7,7 @@ use App\Entity\Compte;
 use App\Entity\Utilisateur;
 use App\Config\App;
 
+use function App\Config\dump;
 use function App\Config\dump_die;
 
 class SecurityController extends AbstractController
@@ -59,7 +60,6 @@ class SecurityController extends AbstractController
   public function login(): void
   {
     $session = $this->session;
-
     $service = App::getDependency('securityService');
 
     $password = $_POST["password"] ?? '';
@@ -97,11 +97,14 @@ class SecurityController extends AbstractController
       $session->unset('old_input');
       $session->unset('login_error');
 
+      $service = App::getDependency('compteService');
+      $session->set('solde', $service->getSoldeUserPrincipal($user));
+
       header('Location:' . BASE_URL . 'compte');
       exit();
     } else {
-      // Échec de connexion
-      $session->set('login_error', 'Identifiants incorrects');
+      // Échec de connexion - utiliser les validators pour l'erreur
+      $session->set('login_error', 'Identifiants incorrects. Vérifiez votre email et mot de passe.');
       parent::renderHTML('utilisateur/login.html.php');
     }
   }
@@ -184,17 +187,32 @@ class SecurityController extends AbstractController
 
 
     if ($user) {
+      // Envoi du SMS de bienvenue avec gestion d'erreur
+      $smsSent = false;
+      $smsError = null;
+
       try {
         $messagerie = new \App\Config\Messagerie();
         $message = 'Bonjour ' . $donnees['prenom'] . '! Bienvenue sur Maxitsa. Votre compte a été créé avec succès. Solde initial: ' . $c->getMontant() . ' FCFA.';
-        // dump_die($messagerie->sendMessage($donnees['telephone'], $message));
         $messagerie->sendMessage($donnees['telephone'], $message);
+        $smsSent = true;
       } catch (\Exception $e) {
-        error_log('Erreur lors de l\'envoi du SMS de bienvenue: ' . $e->getMessage());
+        $smsError = $e->getMessage();
+        error_log('Erreur lors de l\'envoi du SMS de bienvenue: ' . $smsError);
       }
+
+      // Stocker le statut SMS dans la session pour affichage
+      if ($smsSent) {
+        $this->session->set('success_message', 'Compte créé avec succès ! Un SMS de confirmation a été envoyé.');
+      } else {
+        $this->session->set('warning_message', 'Compte créé avec succès, mais l\'envoi du SMS a échoué.');
+      }
+
       header('Location:' . BASE_URL . 'compte');
+      exit();
     } else {
-      $this->session->set('errors', ['registration' => ["Échec de l'inscription. Veuillez réessayer."]]);
+      // Échec de l'inscription - utiliser les validators
+      $this->session->set('errors', ['registration' => ["Échec de l'inscription. Veuillez vérifier vos informations et réessayer."]]);
       parent::renderHTML('utilisateur/inscription.html.php');
     }
   }

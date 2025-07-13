@@ -133,7 +133,7 @@
             <div>
                 <h3 class="text-lg font-semibold text-white mb-1">Mon solde</h3>
                 <div id="soldeMontant" class="text-3xl font-bold text-white">
-                    <?php echo isset($solde) ? number_format($solde, 0, ',', ' ') . ' FCFA' : '0 FCFA'; ?>
+                    <?php echo isset($_SESSION['solde']) ? number_format($_SESSION['solde'], 0, ',', ' ') . ' FCFA' : '0 FCFA'; ?>
                 </div>
                 <p class="text-xs text-orange-100 mt-1">Mis à jour le <?php echo date('d/m/Y à H:i'); ?></p>
             </div>

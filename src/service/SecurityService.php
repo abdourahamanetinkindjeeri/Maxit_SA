@@ -17,6 +17,7 @@ class SecurityService
 {
 
   private static $instance = null;
+  
   public static function getInstance()
   {
     if (self::$instance === null) {
@@ -39,10 +40,27 @@ class SecurityService
   {
     $repo = App::getDependency('utilisateurRepository');
     $user = $repo->selectByLogin($login);
+
+    // Si l'utilisateur n'existe pas, retourner null
+    if (!$user) {
+      return null;
+    }
+
     $crypt = App::getDependency('cryptPassword');
-    if ($crypt->toVerifyPassword($password, $user->getPassword()))
+    $userPassword = $user->getPassword();
+
+    // Vérifier que le mot de passe hashé existe
+    if (!$userPassword) {
+      error_log("Utilisateur {$login} n'a pas de mot de passe hashé");
+      return null;
+    }
+
+    // Vérifier le mot de passe
+    if ($crypt->toVerifyPassword($password, $userPassword)) {
       return $user;
-    return  null;
+    }
+
+    return null;
   }
 
   //    public function inscrire(Utilisateur $utilisateur) : Utilisateur|null

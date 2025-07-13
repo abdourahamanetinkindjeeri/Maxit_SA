@@ -8,6 +8,7 @@ use App\Service\SecurityService;
 use App\Config\middlewares\CryptPassword;
 use App\Config\Validator;
 use App\Config\Session;
+use App\Service\CompteService;
 
 class App
 {
@@ -30,6 +31,7 @@ class App
       ],
       'services' => [
         'securityService' => fn() => SecurityService::getInstance(),
+        'compteService' => fn() => CompteService::getInstance()
       ],
       'middlewares' => [
         'cryptPassword' => fn() => new CryptPassword(),
