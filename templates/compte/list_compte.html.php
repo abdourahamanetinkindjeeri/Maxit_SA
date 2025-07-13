@@ -90,37 +90,6 @@
 <!-- Main Content -->
 <div class="ml-56 w-[calc(100%-14rem)] min-h-screen">
     <!-- Header -->
-    <header class="bg-white shadow-sm px-6 py-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800">Mon compte</h1>
-                <p class="text-sm text-gray-600">Bienvenue, <span class="font-semibold">Utilisateur</span></p>
-            </div>
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center space-x-2 text-sm text-gray-600">
-                    <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>En ligne</span>
-                </div>
-                <button class="p-2 text-gray-500 hover:text-gray-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5-5 5-5h-5m-6 0H4l5 5-5 5h5m6-10v4"></path>
-                    </svg>
-                </button>
-                <a href="#" class="bg-maxitOrange text-white px-4 py-2 rounded-lg hover:bg-maxitOrangeLight transition flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Ajouter un compte
-                </a>
-                <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-full bg-maxitOrange flex items-center justify-center">
-                        <span class="text-white text-sm font-medium">U</span>
-                    </div>
-                    <span class="text-sm font-medium text-gray-700">Utilisateur</span>
-                </div>
-            </div>
-        </div>
-    </header>
     
     <!-- Dashboard Content -->
     <main class="p-0 pt-8 w-full">
@@ -148,65 +117,90 @@
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-lg font-semibold text-gray-800">Historique des transactions</h2>
                 <div class="flex items-center space-x-2">
-                    <button class="bg-maxitOrange text-white px-4 py-2 rounded-lg hover:bg-maxitOrangeLight transition text-sm">
-                        Exporter
-                    </button>
-                    <button class="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-50 transition text-sm">
-                        Filtrer
+                    <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded shadow text-sm">
+                        Voir plus
                     </button>
                 </div>
             </div>
             
+            <form method="get" class="flex items-center space-x-4 mb-4">
+    <div>
+        <label for="filter_date" class="text-sm text-gray-700 mr-2">Date :</label>
+        <input type="date" id="filter_date" name="filter_date" class="border rounded px-2 py-1 text-sm"
+            value="<?php echo isset($_GET['filter_date']) ? htmlspecialchars($_GET['filter_date']) : ''; ?>">
+    </div>
+    <div>
+        <label for="filter_type" class="text-sm text-gray-700 mr-2">Type :</label>
+        <select id="filter_type" name="filter_type" class="border rounded px-2 py-1 text-sm">
+            <option value="">Tous</option>
+            <option value="DEPOT" <?php if(isset($_GET['filter_type']) && $_GET['filter_type']=='DEPOT') echo 'selected'; ?>>Dépôt</option>
+            <option value="RETRAIT" <?php if(isset($_GET['filter_type']) && $_GET['filter_type']=='RETRAIT') echo 'selected'; ?>>Retrait</option>
+            <option value="PAIEMENT" <?php if(isset($_GET['filter_type']) && $_GET['filter_type']=='PAIEMENT') echo 'selected'; ?>>Paiement</option>
+        </select>
+    </div>
+    <button type="submit" class="bg-maxitOrange text-white px-4 py-2 rounded hover:bg-maxitOrangeLight text-sm">Filtrer</button>
+</form>
+
             <div class="overflow-x-auto w-full">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                           
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
-                                         <?php foreach ($_SESSION['transactions'] as $index => $transaction): ?>
+                            <?php
+$transactions = $_SESSION['transactions'] ?? [];
+if (isset($_GET['filter_date']) && $_GET['filter_date']) {
+    $transactions = array_filter($transactions, function($t) {
+        $date = $t['date'] instanceof \DateTime ? $t['date']->format('Y-m-d') : substr($t['date'], 0, 10);
+        return $date === $_GET['filter_date'];
+    });
+}
+if (isset($_GET['filter_type']) && $_GET['filter_type']) {
+    $transactions = array_filter($transactions, function($t) {
+        return (isset($t['typeTransaction']) && $t['typeTransaction'] instanceof \App\Enum\TypeTransaction)
+            ? $t['typeTransaction']->value === $_GET['filter_type']
+            : false;
+    });
+}
+?>
+                            <?php foreach ($transactions as $index => $transaction): ?>
  <tr>
      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800"><?php echo $index + 1; ?></td>
      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium <?php 
-         $type = strtolower($transaction['type']);
-         if (in_array($type, ['dépôt', 'depot', 'virement reçu'])) {
+         $type = $transaction['typeTransaction']->value;
+         if ($type === 'DEPOT') {
              echo 'text-green-600';
-         } elseif (in_array($type, ['retrait', 'paiement', 'virement envoyé'])) {
+         } elseif (in_array($type, ['RETRAIT', 'PAIEMENT'])) {
              echo 'text-red-600';
          } else {
              echo 'text-gray-800';
          }
      ?>">
          <?php 
-         $type = strtolower($transaction['type']);
+         $type = $transaction['typeTransaction']->value;
          $montant = $transaction['montant'];
-         if (in_array($type, ['dépôt', 'depot', 'virement reçu'])) {
+         if ($type === 'DEPOT') {
              echo '+' . number_format($montant, 0, ',', ' ') . ' FCFA';
-         } elseif (in_array($type, ['retrait', 'paiement', 'virement envoyé'])) {
+         } elseif (in_array($type, ['RETRAIT', 'PAIEMENT'])) {
              echo '-' . number_format($montant, 0, ',', ' ') . ' FCFA';
          } else {
              echo number_format($montant, 0, ',', ' ') . ' FCFA';
          }
          ?>
      </td>
-     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-         <?php echo $transaction['date'] instanceof \DateTime ? $transaction['date']->format('d/m/Y H:i') : htmlspecialchars($transaction['date']); ?>
-     </td>
-     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-         <?php echo htmlspecialchars($transaction['type']); ?>
-     </td>
-     <td class="px-6 py-4 whitespace-nowrap text-sm">
-         <?php if ($transaction['statut'] === 'succès'): ?>
-             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Succès</span>
-         <?php else: ?>
-             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Échoué</span>
-         <?php endif; ?>
-     </td>
+           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+       <?php echo $transaction['typeTransaction']->value; ?>
+      </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+           <?php echo $transaction['date'] instanceof \DateTime ? $transaction['date']->format('d/m/Y H:i') : htmlspecialchars($transaction['date']); ?>
+       </td>
+     
      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
          <a href="#" class="text-indigo-600 hover:text-indigo-900">Détails</a>
      </td>
@@ -216,6 +210,7 @@
                   
                 </table>
             </div>
+          
         </div>
     </main>
 </div>
