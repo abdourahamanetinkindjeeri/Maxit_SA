@@ -25,7 +25,6 @@ class CompteRepository extends AbstractRepository
 
   private function __construct()
   {
-    //        $this->db = Database::getInstance()->getConnection();
     parent::__construct();
 
     $this->table = "compte";

@@ -8,7 +8,9 @@ use App\Service\SecurityService;
 use App\Config\middlewares\CryptPassword;
 use App\Config\Validator;
 use App\Config\Session;
+use App\Repository\TransactionRepository;
 use App\Service\CompteService;
+use App\Service\TransactionService;
 
 class App
 {
@@ -28,10 +30,12 @@ class App
       'repositories' => [
         'utilisateurRepository' => fn() => UtilisateurRepository::getInstance(),
         'compteRepository' => fn() => CompteRepository::getInstance(),
+        'transactionRepository' => fn() => TransactionRepository::getInstance()
       ],
       'services' => [
         'securityService' => fn() => SecurityService::getInstance(),
-        'compteService' => fn() => CompteService::getInstance()
+        'compteService' => fn() => CompteService::getInstance(),
+        'transactionService' => fn() => TransactionService::getInstance()
       ],
       'middlewares' => [
         'cryptPassword' => fn() => new CryptPassword(),

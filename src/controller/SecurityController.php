@@ -99,7 +99,13 @@ class SecurityController extends AbstractController
 
       $service = App::getDependency('compteService');
       $session->set('solde', $service->getSoldeUserPrincipal($user));
+      $transactionService = App::getDependency('transactionService');
+      // dump_die($tran sactionRepo->getLastTenTransactions($user));
+      // $session->set('transactions', $transactionService->getLastTenTransaction($user)->toArray());
+      $transactions = $transactionService->getLastTenTransaction($user);
+      $session->set('transactions', array_map(fn($t) => $t->toArray(), $transactions));
 
+      // dump_die($transactionService->getLastTenTransaction($user));
       header('Location:' . BASE_URL . 'compte');
       exit();
     } else {

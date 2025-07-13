@@ -2,9 +2,9 @@
 
 namespace App\Enum;
 
-enum TypeTransaction : string
+enum TypeTransaction: string
 {
-    case DEPOT = 'Depot';
-    case RETRAIT = 'Retrait';
-    case PAIEMENT = 'Paiement';
+  case RETRAIT = 'RETRAIT';
+  case DEPOT = 'DEPOT';
+  case VIREMENT = 'PAIEMENT';
 }
