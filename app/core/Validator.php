@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Config;
+namespace App\Core;
 
 use App\Translate\MessageErreur;
 
@@ -48,8 +48,8 @@ class Validator
   private function validerRequired(string $field, $value, $parameter): void
   {
     if (empty($value) && $value !== '0') {
-        $this->errors[$field][] = str_replace('field',$field,MessageErreur::CHAMP_REQUIS->value);
-//      $this->errors[$field][] = "Le champ $field est requis.";
+      $this->errors[$field][] = str_replace('field', $field, MessageErreur::CHAMP_REQUIS->value);
+      //      $this->errors[$field][] = "Le champ $field est requis.";
     }
   }
 
@@ -63,8 +63,8 @@ class Validator
   private function validerEmail(string $field, $value, $parameter): void
   {
     if (!self::isEmail($value)) {
-        $this->errors[$field][] = str_replace('field',$field,MessageErreur::EMAIL_INVALIDE->value);
-//      $this->errors[$field][] = "Le champ $field doit être une adresse email valide.";
+      $this->errors[$field][] = str_replace('field', $field, MessageErreur::EMAIL_INVALIDE->value);
+      //      $this->errors[$field][] = "Le champ $field doit être une adresse email valide.";
     }
   }
 
@@ -78,8 +78,8 @@ class Validator
   private function validerPhone(string $field, $value, $parameter): void
   {
     if (!self::isValidNumber($value)) {
-        $this->errors[$field][] = str_replace(':field',$field,MessageErreur::NUMBER_INVALID->value);
-//      $this->errors[$field][] = "Le champ $field doit être un numéro de téléphone valide au Sénégal.";
+      $this->errors[$field][] = str_replace(':field', $field, MessageErreur::NUMBER_INVALID->value);
+      //      $this->errors[$field][] = "Le champ $field doit être un numéro de téléphone valide au Sénégal.";
     }
   }
 
@@ -93,8 +93,8 @@ class Validator
   private function validerCni(string $field, $value, $parameter): void
   {
     if (!self::isValidCNISenegal($value)) {
-        $this->errors[$field][] = str_replace(':field', $field, MessageErreur::CNI_INVALIDE->value);
-//        $this->errors[$field][] = "Le champ $field doit être une CNI valide au Sénégal.";
+      $this->errors[$field][] = str_replace(':field', $field, MessageErreur::CNI_INVALIDE->value);
+      //        $this->errors[$field][] = "Le champ $field doit être une CNI valide au Sénégal.";
     }
   }
 

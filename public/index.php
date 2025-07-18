@@ -1,7 +1,12 @@
 <?php
-
-use App\Config\App;
-
+require_once __DIR__ . '/../vendor/autoload.php';
 require_once '../app/config/bootstrap.php';
+use App\Core\App;
 
-App::getDependency('router')->resolve($routes);
+
+
+App::get('App\\Core\\Router')->resolve(
+  isset(
+    $routes
+  ) ? $routes : []
+);

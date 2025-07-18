@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Config;
+namespace App\Core;
 
 use App\Config\Abstract\Singleton;
 use PDO;
@@ -39,5 +39,31 @@ class Database
     return $this->connection;
   }
 }
+//
+////$repo = Database::getInstance()->getConnection();
 
-//$repo = Database::getInstance()->getConnection();
+
+// namespace App\Core;
+
+// class Database
+// {
+//     private static ?Database $instance = null;
+
+//     private function __construct()
+//     {
+//         echo "Database instancié avec succès!<br>";
+//     }
+
+//     public static function getInstance(): self
+//     {
+//         if (self::$instance === null) {
+//             self::$instance = new self();
+//         }
+//         return self::$instance;
+//     }
+
+//     public function getConnection()
+//     {
+//         return "Database connection";
+//     }
+// }

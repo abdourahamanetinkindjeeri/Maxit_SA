@@ -2,7 +2,7 @@
 
 namespace App\Entity;
 
-use App\Config\abstract\AbstractEntity;
+use App\Core\abstract\AbstractEntity;
 use App\Enum\TypeTransaction;
 
 class Transaction extends AbstractEntity

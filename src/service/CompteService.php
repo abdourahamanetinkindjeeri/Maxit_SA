@@ -2,7 +2,7 @@
 
 namespace App\Service;
 
-use App\Config\App;
+use App\Core\App;
 use App\Entity\Utilisateur;
 use App\Repository\CompteRepository;
 
@@ -24,7 +24,7 @@ class CompteService
 
   public function getSoldeUserPrincipal(Utilisateur $utilisateur): float
   {
-    $repo = App::getDependency('compteRepository');
+    $repo = App::get('App\\Repository\\CompteRepository');
     $solde = $repo->getSoldeByUserId($utilisateur->getId());
     return $solde !== null ? $solde : 0.0;
   }

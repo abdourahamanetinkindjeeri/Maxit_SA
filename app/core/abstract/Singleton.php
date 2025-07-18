@@ -1,5 +1,5 @@
 <?php
-namespace App\Config\Abstract;
+namespace App\Core\Abstract;
 
 abstract class Singleton
 {

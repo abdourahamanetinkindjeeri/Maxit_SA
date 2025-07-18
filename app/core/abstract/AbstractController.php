@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Config\Abstract;
+namespace App\Core\Abstract;
 
-use App\Config\App;
-use App\Config\Session;
+use App\Core\App;
+use App\Core\Session;
 
 abstract class AbstractController
 {
@@ -12,7 +12,7 @@ abstract class AbstractController
 
   public function __construct()
   {
-    $this->session = App::getDependency('session');
+    $this->session = App::get('App\\Core\\Session');
   }
 
   protected function renderHTML(string $template, array $data = []): void
@@ -27,5 +27,4 @@ abstract class AbstractController
     // Inclure le layout approprié
     require_once __DIR__ . "/../../../templates/layout/{$this->layout}.layout.php";
   }
-
 }

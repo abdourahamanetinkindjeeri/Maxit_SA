@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Config\abstract;
+namespace App\Core\abstract;
 
 
 

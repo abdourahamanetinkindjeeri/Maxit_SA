@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Config;
+namespace App\Core;
 
 use Twilio\Rest\Client;
 use \Exception;

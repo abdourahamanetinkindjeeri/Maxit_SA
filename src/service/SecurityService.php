@@ -2,10 +2,10 @@
 
 namespace App\Service;
 
-use App\Config\App;
+use App\Core\App;
 use App\Config\middlewares\CryptPassword;
-use App\Config\Upload;
-use App\Config\Validator;
+use App\Core\Upload;
+use App\Core\Validator;
 use App\Entity\Compte;
 use App\Entity\Utilisateur;
 use App\Repository\CompteRepository;
@@ -17,7 +17,7 @@ class SecurityService
 {
 
   private static $instance = null;
-  
+
   public static function getInstance()
   {
     if (self::$instance === null) {
@@ -31,7 +31,7 @@ class SecurityService
 
   public function seConnecter(string $login, string $password): Utilisateur|null
   {
-    $repo = App::getDependency('utilisateurRepository');
+    $repo = App::get('App\\Repository\\UtilisateurRepository');
     $user = $repo->selectByLogin($login);
 
     // Si l'utilisateur n'existe pas, retourner null
@@ -39,7 +39,7 @@ class SecurityService
       return null;
     }
 
-    $crypt = App::getDependency('cryptPassword');
+    $crypt = App::get('App\\Core\\Middlewares\\CryptPassword');
     $userPassword = $user->getPassword();
 
     // Vérifier que le mot de passe hashé existe
@@ -60,9 +60,9 @@ class SecurityService
 
   public function inscrire(Utilisateur $utilisateur, Compte $compte): ?Utilisateur
   {
-    $repoUtilisateur = App::getDependency('utilisateurRepository');
-    $repoCompte = App::getDependency('compteRepository');
-    $pdo = App::getDependency('database');
+    $repoUtilisateur = App::get('App\\Repository\\UtilisateurRepository');
+    $repoCompte = App::get('App\\Repository\\CompteRepository');
+    $pdo = App::get('App\\Core\\Database');
 
     try {
       $pdo->beginTransaction();
@@ -101,19 +101,19 @@ class SecurityService
 
   public function isCNIUsed($cni)
   {
-    $repo = App::getDependency('utilisateurRepository');
+    $repo = App::get('App\\Repository\\UtilisateurRepository');
     return Validator::isUniqueRow($repo->countRow('cni', $cni, 'utilisateur'));
   }
 
   public function isPhoneNumberUsed($telephone)
   {
-    $repo = App::getDependency('utilisateurRepository');
+    $repo = App::get('App\\Repository\\UtilisateurRepository');
     return Validator::isUniqueRow($repo->countRow('telephones', $telephone, 'compte'));
   }
 
   public function isLoginUsed($login)
   {
-    $repo = App::getDependency('utilisateurRepository');
+    $repo = App::get('App\\Repository\\UtilisateurRepository');
     return Validator::isUniqueRow($repo->countRow('login', $login, 'utilisateur'));
   }
 }

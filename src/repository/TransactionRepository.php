@@ -2,8 +2,8 @@
 
 namespace App\Repository;
 
-use App\Config\Abstract\AbstractRepository;
-use App\Config\App;
+use App\Core\Abstract\AbstractRepository;
+use App\Core\App;
 use App\Entity\Transaction;
 use App\Entity\Utilisateur;
 

@@ -2,7 +2,7 @@
 
 namespace App\Entity;
 
-use App\Config\abstract\AbstractEntity;
+use App\Core\abstract\AbstractEntity;
 use App\Enum\TypeCompte;
 use function App\Config\dump_die;
 

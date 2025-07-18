@@ -2,7 +2,7 @@
 
 namespace App\Service;
 
-use App\Config\App;
+use App\Core\App;
 use App\Entity\Utilisateur;
 
 class TransactionService
@@ -23,7 +23,7 @@ class TransactionService
 
   public function getLastTenTransaction(Utilisateur $utilisateur)
   {
-    $repo = App::getDependency('transactionRepository');
+    $repo = App::get('App\\Repository\\TransactionRepository');
 
     return $repo->getLastTenTransactions($utilisateur);
   }

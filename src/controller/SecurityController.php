@@ -2,10 +2,10 @@
 
 namespace App\Controller;
 
-use App\Config\Abstract\AbstractController;
+use App\Core\Abstract\AbstractController;
 use App\Entity\Compte;
 use App\Entity\Utilisateur;
-use App\Config\App;
+use App\Core\App;
 
 use function App\Config\dump;
 use function App\Config\dump_die;
@@ -60,12 +60,12 @@ class SecurityController extends AbstractController
   public function login(): void
   {
     $session = $this->session;
-    $service = App::getDependency('securityService');
+    $service = App::get('App\\Service\\SecurityService');
 
     $password = $_POST["password"] ?? '';
     $login = $_POST["login"] ?? '';
 
-    $validator = App::getDependency('validator');
+    $validator = App::get('App\\Core\\Validator');
     $donnees = [
       'login' => $login,
       'password' => $password,
@@ -96,20 +96,20 @@ class SecurityController extends AbstractController
       $session->unset('errors');
       $session->unset('old_input');
       $session->unset('login_error');
-// technique
-//      $service = App::getDependency('compteService');
-//      $session->set('solde', $service->getSoldeUserPrincipal($user));
-//      $transactionService = App::getDependency('transactionService');
-//      // dump_die($tran sactionRepo->getLastTenTransactions($user));
-//      // $session->set('transactions', $transactionService->getLastTenTransaction($user)->toArray());
-//      $transactions = $transactionService->getLastTenTransaction($user);
-//      $transactions = array_map(fn($t) => $t->toArray(), $transactions);
-//
-//      parent::renderHTML('compte/list_compte.html.php', ['transactions' => $transactions,'solde' => $service->getSoldeUserPrincipal($user)]);
+      // technique
+      //      $service = App::getDependency('compteService');
+      //      $session->set('solde', $service->getSoldeUserPrincipal($user));
+      //      $transactionService = App::getDependency('transactionService');
+      //      // dump_die($tran sactionRepo->getLastTenTransactions($user));
+      //      // $session->set('transactions', $transactionService->getLastTenTransaction($user)->toArray());
+      //      $transactions = $transactionService->getLastTenTransaction($user);
+      //      $transactions = array_map(fn($t) => $t->toArray(), $transactions);
+      //
+      //      parent::renderHTML('compte/list_compte.html.php', ['transactions' => $transactions,'solde' => $service->getSoldeUserPrincipal($user)]);
       // $session->set('transactions', array_map(fn($t) => $t->toArray(), $transactions));
-//fin simulation
+      //fin simulation
       // dump_die($transactionService->getLastTenTransaction($user));
-        $this->handleSuccessfulLogin($user);
+      $this->handleSuccessfulLogin($user);
       header('Location:' . BASE_URL . 'compte');
       exit();
     } else {
@@ -121,7 +121,7 @@ class SecurityController extends AbstractController
 
   public function inscrire(): void
   {
-    $service = App::getDependency('securityService');
+    $service = App::get('App\\Service\\SecurityService');
 
     // Collecte des données du formulaire
     $donnees = [
@@ -135,7 +135,7 @@ class SecurityController extends AbstractController
       'cni_verso' => $_FILES['cni_verso'] ?? null,
     ];
 
-    $validator = App::getDependency('validator');
+    $validator = App::get('App\\Core\\Validator');
 
     // Définition des règles de validation
     $regles = [
@@ -191,7 +191,7 @@ class SecurityController extends AbstractController
     $c = new Compte();
     $c->setMontant(10000);
     $c->setUtilisateur($u);
-    $c->setTelephones($donnees['telephone']);
+    $c->setTelephone($donnees['telephone']);
 
     $user = $service->inscrire($u, $c);
 
@@ -202,7 +202,7 @@ class SecurityController extends AbstractController
       $smsError = null;
 
       try {
-        $messagerie = new \App\Config\Messagerie();
+        $messagerie = new \App\Core\Messagerie();
         $message = 'Bonjour ' . $donnees['prenom'] . '! Bienvenue sur Maxitsa. Votre compte a été créé avec succès. Solde initial: ' . $c->getMontant() . ' FCFA.';
         $messagerie->sendMessage($donnees['telephone'], $message);
         $smsSent = true;
@@ -227,35 +227,34 @@ class SecurityController extends AbstractController
     }
   }
 
-    private function handleSuccessfulLogin(Utilisateur $user): void
-    {
-        $session = $this->session;
+  private function handleSuccessfulLogin(Utilisateur $user): void
+  {
+    $session = $this->session;
 
-        // Enregistrement de l'utilisateur connecté
-        $session->set('user', $user->toArray());
+    // Enregistrement de l'utilisateur connecté
+    $session->set('user', $user->toArray());
 
-        // Nettoyage des anciennes erreurs
-        $session->unset('errors');
-        $session->unset('old_input');
-        $session->unset('login_error');
+    // Nettoyage des anciennes erreurs
+    $session->unset('errors');
+    $session->unset('old_input');
+    $session->unset('login_error');
 
-        // Récupération du solde principal
-        /** @var CompteService $compteService */
-        $compteService = App::getDependency('compteService');
-        $solde = $compteService->getSoldeUserPrincipal($user);
-        $session->set('solde', $solde);
+    // Récupération du solde principal
+    /** @var CompteService $compteService */
+    $compteService = App::get('App\\Service\\CompteService');
+    $solde = $compteService->getSoldeUserPrincipal($user);
+    $session->set('solde', $solde);
 
-        // Récupération des 10 dernières transactions
-        /** @var TransactionService $transactionService */
-        $transactionService = App::getDependency('transactionService');
-        $transactions = $transactionService->getLastTenTransaction($user);
-        $transactionsArray = array_map(fn($t) => $t->toArray(), $transactions);
+    // Récupération des 10 dernières transactions
+    /** @var TransactionService $transactionService */
+    $transactionService = App::get('App\\Service\\TransactionService');
+    $transactions = $transactionService->getLastTenTransaction($user);
+    $transactionsArray = array_map(fn($t) => $t->toArray(), $transactions);
 
-        // Redirection ou affichage (selon si header peut être envoyé)
-        $this->renderHTML('compte/list_compte.html.php', [
-            'transactions' => $transactionsArray,
-            'solde' => $solde
-        ]);
-    }
-
+    // Redirection ou affichage (selon si header peut être envoyé)
+    $this->renderHTML('compte/list_compte.html.php', [
+      'transactions' => $transactionsArray,
+      'solde' => $solde
+    ]);
+  }
 }

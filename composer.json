@@ -9,13 +9,13 @@
       "App\\Enum\\": "src/enum/",
       "App\\Translate\\": "src/enum/transalate/fr/",
       "App\\Controller\\": "src/controller/",
-      "App\\Core\\": "app/config/",
-      "App\\Config\\" : "app/core/",
-      "App\\Config\\Abstract\\" : "app/core/abstract",
-      "App\\Validator\\" : "app/core/validator"
-
+      "App\\Core\\": "app/core/",
+      "App\\Config\\": "app/config/",
+      "App\\Core\\Abstract\\": "app/core/abstract",
+      "App\\Core\\Middlewares\\": "app/core/middlewares",
+      "App\\Validator\\": "app/core/validator"
     },
-    "files" : [
+    "files": [
       "app/config/helpers.php"
     ]
   },
@@ -28,6 +28,7 @@
   "require": {
     "vlucas/phpdotenv": "^5.6",
     "ext-pdo": "*",
-    "twilio/sdk": "^8.6"
+    "twilio/sdk": "^8.6",
+    "symfony/yaml": "^7.3"
   }
 }

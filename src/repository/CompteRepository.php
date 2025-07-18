@@ -2,12 +2,11 @@
 
 namespace App\Repository;
 
-use App\Config\Abstract\AbstractRepository;
-use App\Config\App;
+use App\Core\Abstract\AbstractRepository;
+use App\Core\App;
 use App\Entity\Compte;
 use App\Entity\Utilisateur;
 use \PDO;
-use function App\Config\dump_die;
 
 class CompteRepository extends AbstractRepository
 {
@@ -99,11 +98,11 @@ class CompteRepository extends AbstractRepository
   public function getSoldeByUserId(int $userId): ?float
   {
     $sql = "SELECT montant FROM {$this->table} WHERE client_id = :user_id";
-
     $stmt = $this->db->prepare($sql);
     $stmt->execute(['user_id' => $userId]);
 
     $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
     return $result ? (float) $result['montant'] : null;
   }
 
@@ -145,36 +144,6 @@ class CompteRepository extends AbstractRepository
     $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
     return array_map(fn($row) => Compte::toObject($row), $results);
-  }
-
-  /**
-   * Récupère tous les comptes d'un utilisateur
-   */
-  public function getComptesByUserId(int $userId): array
-  {
-    $sql = "SELECT * FROM {$this->table} WHERE client_id = :user_id ORDER BY id";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute(['user_id' => $userId]);
-    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    return array_map(fn($row) => Compte::toObject($row), $results);
-  }
-
-  /**
-   * Crée un compte secondaire pour un utilisateur
-   */
-  public function creerCompteSecondaire(int $userId, string $telephone, float $solde = 0.0): bool
-  {
-    try {
-      $sql = "INSERT INTO {$this->table} (client_id, montant, telephone) VALUES (:client_id, :montant, :telephone)";
-      $stmt = $this->db->prepare($sql);
-      $stmt->bindValue(':client_id', $userId, PDO::PARAM_INT);
-      $stmt->bindValue(':montant', $solde);
-      $stmt->bindValue(':telephone', $telephone);
-      return $stmt->execute();
-    } catch (\PDOException $e) {
-      error_log("Erreur création compte secondaire: " . $e->getMessage());
-      return false;
-    }
   }
 
   //  A refaire

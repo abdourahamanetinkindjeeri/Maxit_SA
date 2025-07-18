@@ -1,0 +1,50 @@
+services:
+  App\Core\Database:
+    class: App\Core\Database
+    arguments: []
+
+  App\Core\Session:
+    class: App\Core\Session
+    arguments: []
+
+  App\Core\Router:
+    class: App\Core\Router
+    arguments: []
+
+  App\Repository\UtilisateurRepository:
+    class: App\Repository\UtilisateurRepository
+    arguments:
+      - '@App\Core\Database'
+
+  App\Repository\CompteRepository:
+    class: App\Repository\CompteRepository
+    arguments:
+      - '@App\Core\Database'
+
+  App\Repository\TransactionRepository:
+    class: App\Repository\TransactionRepository
+    arguments:
+      - '@App\Core\Database'
+
+  App\Service\SecurityService:
+    class: App\Service\SecurityService
+    arguments:
+      - '@App\Repository\UtilisateurRepository'
+
+  App\Service\CompteService:
+    class: App\Service\CompteService
+    arguments:
+      - '@App\Repository\CompteRepository'
+
+  App\Service\TransactionService:
+    class: App\Service\TransactionService
+    arguments:
+      - '@App\Repository\TransactionRepository'
+
+  App\Core\Validator:
+    class: App\Core\Validator
+    arguments: []
+
+  App\Core\Middlewares\CryptPassword:
+    class: App\Core\Middlewares\CryptPassword
+    arguments: []
