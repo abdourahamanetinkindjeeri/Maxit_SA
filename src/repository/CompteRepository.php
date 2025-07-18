@@ -7,6 +7,7 @@ use App\Config\App;
 use App\Entity\Compte;
 use App\Entity\Utilisateur;
 use \PDO;
+use function App\Config\dump_die;
 
 class CompteRepository extends AbstractRepository
 {
@@ -80,24 +81,16 @@ class CompteRepository extends AbstractRepository
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 
-  public function selectByTelephone(string $telephone): null|Compte
+  public function selectByTelephone(string $telephone): ?Compte
   {
-    $sql = "SELECT * FROM {$this->table} WHERE telephone = :telephome";
+    $sql = "SELECT * FROM {$this->table} WHERE telephone = :telephone";
     $stmt = $this->db->prepare($sql);
-    $stmt->execute([
-      'telephone' => $telephone,
-
-    ]);
-
-
+    $stmt->execute(['telephone' => $telephone]);
     $data = $stmt->fetch(\PDO::FETCH_ASSOC);
-
     if ($data === false) {
       return null;
     }
-
-
-    return Utilisateur::toObject($data) ?? null;
+    return Compte::toObject($data);
   }
 
   /**
@@ -106,11 +99,11 @@ class CompteRepository extends AbstractRepository
   public function getSoldeByUserId(int $userId): ?float
   {
     $sql = "SELECT montant FROM {$this->table} WHERE client_id = :user_id";
+
     $stmt = $this->db->prepare($sql);
     $stmt->execute(['user_id' => $userId]);
 
     $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-
     return $result ? (float) $result['montant'] : null;
   }
 
@@ -154,33 +147,63 @@ class CompteRepository extends AbstractRepository
     return array_map(fn($row) => Compte::toObject($row), $results);
   }
 
+  /**
+   * Récupère tous les comptes d'un utilisateur
+   */
+  public function getComptesByUserId(int $userId): array
+  {
+    $sql = "SELECT * FROM {$this->table} WHERE client_id = :user_id ORDER BY id";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['user_id' => $userId]);
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return array_map(fn($row) => Compte::toObject($row), $results);
+  }
+
+  /**
+   * Crée un compte secondaire pour un utilisateur
+   */
+  public function creerCompteSecondaire(int $userId, string $telephone, float $solde = 0.0): bool
+  {
+    try {
+      $sql = "INSERT INTO {$this->table} (client_id, montant, telephone) VALUES (:client_id, :montant, :telephone)";
+      $stmt = $this->db->prepare($sql);
+      $stmt->bindValue(':client_id', $userId, PDO::PARAM_INT);
+      $stmt->bindValue(':montant', $solde);
+      $stmt->bindValue(':telephone', $telephone);
+      return $stmt->execute();
+    } catch (\PDOException $e) {
+      error_log("Erreur création compte secondaire: " . $e->getMessage());
+      return false;
+    }
+  }
+
+  //  A refaire
   public function insertCompte(Compte $compte): bool
   {
     try {
-      // Requête avec les colonnes nécessaires et telephones au pluriel
-      $sql = "INSERT INTO {$this->table} (client_id, montant, telephones) 
-                VALUES (:client_id, :montant, :telephones)";
-
+      $sql = "INSERT INTO {$this->table} (client_id, montant, telephone) 
+                VALUES (:client_id, :montant, :telephone)";
       $stmt = $this->db->prepare($sql);
-
-      // Récupérer les numéros en tableau PHP
-      $telephones = $compte->getTelephones(); // doit retourner un tableau, ex: ['+221770000001', '+221770000002']
-
-      // Formater en string compatible PostgreSQL ARRAY
-      // Exemple: '{"num1","num2"}'
-      $formattedTelephones = '{' . implode(',', array_map(fn($tel) => '"' . $tel . '"', $telephones)) . '}';
-
       $stmt->bindValue(':client_id', $compte->getUtilisateur()->getId(), PDO::PARAM_INT);
       $stmt->bindValue(':montant', $compte->getMontant());
-      $stmt->bindValue(':telephones', $formattedTelephones, PDO::PARAM_STR);
-      //            $stmt->bindValue(':cni', $compte->getCni(), PDO::PARAM_STR);
-      //            $stmt->bindValue(':cni_recto', $compte->getCniRecto(), PDO::PARAM_STR);
-      //            $stmt->bindValue(':cni_verso', $compte->getCniVerso(), PDO::PARAM_STR);
-
+      $stmt->bindValue(':telephone', $compte->getTelephone(), PDO::PARAM_STR);
       return $stmt->execute();
     } catch (\PDOException $e) {
       error_log("Erreur insertion compte: " . $e->getMessage());
       return false;
     }
+  }
+
+  public function getSoldeByNumero(int $userId, string $numero): ?float
+  {
+    $sql = "SELECT montant, telephone FROM {$this->table} WHERE client_id = :user_id";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['user_id' => $userId]);
+    $compte = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$compte) return null;
+    if ($numero === ($compte['telephone'] ?? null)) {
+      return (float)$compte['montant'];
+    }
+    return null;
   }
 }

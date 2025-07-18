@@ -27,14 +27,7 @@ class SecurityService
   }
 
   private function __construct() {}
-  //    public function seConnecter(string $login, string $password) : Utilisateur|null
-  //    {
-  //        $repo = UtilisateurRepository::getInstance();
-  //        $user = $repo->selectByLoginAndPassword($login, $password);
-  //
-  //        return $user ?? null;
-  //
-  //    }
+
 
   public function seConnecter(string $login, string $password): Utilisateur|null
   {
@@ -63,28 +56,13 @@ class SecurityService
     return null;
   }
 
-  //    public function inscrire(Utilisateur $utilisateur) : Utilisateur|null
-  //    {
-  ////        dump_die($utilisateur);
-  //        $repo = UtilisateurRepository::getInstance();
-  //        $cniRecto = Upload::handleFileUpload('cni_recto');
-  //        if ($cniRecto) {
-  //            $utilisateur->setCniRecto($cniRecto);
-  //        }
-  //
-  //        $cniVerso = Upload::handleFileUpload('cni_verso');
-  //        if ($cniVerso) {
-  //            $utilisateur->setCniVerso($cniVerso);
-  //        }
-  //        return $repo->insertUtilisateur($utilisateur);
-  //
-  //    }
+
 
   public function inscrire(Utilisateur $utilisateur, Compte $compte): ?Utilisateur
   {
     $repoUtilisateur = App::getDependency('utilisateurRepository');
     $repoCompte = App::getDependency('compteRepository');
-    $pdo = App::getDependency('database'); // Assure-toi d'avoir une méthode pour récupérer le PDO
+    $pdo = App::getDependency('database');
 
     try {
       $pdo->beginTransaction();

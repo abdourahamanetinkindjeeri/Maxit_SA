@@ -22,6 +22,8 @@
         };
     </script>
 </head>
+
+
 <body class="bg-maxitGray min-h-screen">
 <!-- Sidebar -->
 <div class="fixed inset-y-0 left-0 w-56 bg-white shadow-md border-r border-gray-200 z-20">
@@ -77,7 +79,7 @@
                 </div>
                 <p class="text-xs text-gray-600 mt-1">Dernière mise à jour: 14:30</p>
             </div>
-            <a href="#" class="flex items-center px-4 py-3 text-red-600 rounded-lg hover:bg-red-50 transition">
+            <a href="<?php echo BASE_URL; ?>logout"" class="flex items-center px-4 py-3 text-red-600 rounded-lg hover:bg-red-50 transition">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
@@ -90,27 +92,124 @@
 <!-- Main Content -->
 <div class="ml-56 w-[calc(100%-14rem)] min-h-screen">
     <!-- Header -->
-    
-    <!-- Dashboard Content -->
-    <main class="p-0 pt-8 w-full">
-        <!-- Solde de l'utilisateur connecté -->
-        <div id="soldeSection" class="bg-gradient-to-r from-maxitOrange to-maxitOrangeLight rounded-xl shadow-maxit p-6 mb-8 flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-semibold text-white mb-1">Mon solde</h3>
-                <div id="soldeMontant" class="text-3xl font-bold text-white">
-                  <?php echo isset($_SESSION['solde']) ? number_format($_SESSION['solde'], 0, ',', ' ') . ' FCFA' : '0 FCFA'; ?>                
-                </div>
-                <p class="text-xs text-orange-100 mt-1">Mis à jour le <span id="dateUpdate"></span></p>
-            </div>
-            <div class="flex items-center space-x-4">
-                <button id="toggleSolde" class="bg-white text-maxitOrange font-semibold px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight hover:text-white transition flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Masquer le solde
-                </button>
-            </div>
+    <div class="flex items-center justify-between mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Mon Compte</h1>
+        <div class="flex space-x-2">
+            <button id="btnAddSecondary" class="bg-maxitOrange text-white px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight transition font-semibold">
+                + Ajouter un compte secondaire
+            </button>
+            <button id="btnChangeAccount" class="bg-white text-maxitOrange font-semibold px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight hover:text-white transition flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 17v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12v9m0 0l-3-3m3 3l3-3" />
+                </svg>
+                Changer de compte
+            </button>
         </div>
+    </div>
+    <?php if (!empty($_SESSION['add_secondary_errors'])): ?>
+        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <?php foreach ($_SESSION['add_secondary_errors'] as $err): ?>
+                <div><?php echo htmlspecialchars($err); ?></div>
+            <?php endforeach; unset($_SESSION['add_secondary_errors']); ?>
+        </div>
+    <?php endif; ?>
+    <?php if (!empty($_SESSION['add_secondary_success'])): ?>
+        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+            <?php echo htmlspecialchars($_SESSION['add_secondary_success']); unset($_SESSION['add_secondary_success']); ?>
+        </div>
+    <?php endif; ?>
+    <!-- Modal d'ajout de compte secondaire -->
+    <div id="modalAddSecondary" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+            <button id="closeModalAddSecondary" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Ajouter un compte secondaire</h2>
+            <form method="post" action="<?php echo BASE_URL; ?>compte/ajouter-secondaire">
+                <div class="mb-4">
+                    <label for="numero" class="block text-gray-700 font-semibold mb-2">Numéro du compte secondaire <span class="text-red-500">*</span></label>
+                    <input type="text" id="numero" name="numero" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-maxitOrange">
+                </div>
+                <div class="mb-4">
+                    <label for="solde" class="block text-gray-700 font-semibold mb-2">Solde initial (optionnel)</label>
+                    <input type="number" id="solde" name="solde" min="0" step="0.01" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-maxitOrange">
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-maxitOrange text-white px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight transition font-semibold">Créer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Modal de changement de compte -->
+    <div id="modalChangeAccount" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+            <button id="closeModalChangeAccount" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Changer de compte</h2>
+            <form method="post" action="<?php echo BASE_URL; ?>compte/changer-compte">
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Sélectionnez un numéro :</label>
+                    <select name="compte_id" class="w-full border rounded px-3 py-2" required>
+                        <?php foreach (($comptes ?? []) as $c): ?>
+                            <option value="<?php echo $c->getId(); ?>" <?php if($c->getId() == ($compte_courant_id ?? null)) echo 'selected'; ?>>
+                                <?php echo htmlspecialchars($c->getTelephone()); ?><?php if($c->getId() == ($comptes[0]->getId() ?? null)) echo ' (principal)'; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-maxitOrange text-white px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight transition font-semibold">Valider</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        const btnAddSecondary = document.getElementById('btnAddSecondary');
+        const modalAddSecondary = document.getElementById('modalAddSecondary');
+        const closeModalAddSecondary = document.getElementById('closeModalAddSecondary');
+        btnAddSecondary.addEventListener('click', () => {
+            modalAddSecondary.classList.remove('hidden');
+        });
+        closeModalAddSecondary.addEventListener('click', () => {
+            modalAddSecondary.classList.add('hidden');
+        });
+        window.addEventListener('click', (e) => {
+            if (e.target === modalAddSecondary) {
+                modalAddSecondary.classList.add('hidden');
+            }
+        });
+        const btnChangeAccount = document.getElementById('btnChangeAccount');
+        const modalChangeAccount = document.getElementById('modalChangeAccount');
+        const closeModalChangeAccount = document.getElementById('closeModalChangeAccount');
+        btnChangeAccount.addEventListener('click', () => {
+            modalChangeAccount.classList.remove('hidden');
+        });
+        closeModalChangeAccount.addEventListener('click', () => {
+            modalChangeAccount.classList.add('hidden');
+        });
+        window.addEventListener('click', (e) => {
+            if (e.target === modalChangeAccount) {
+                modalChangeAccount.classList.add('hidden');
+            }
+        });
+    </script>
+    <!-- Solde de l'utilisateur connecté -->
+    <div id="soldeSection" class="bg-gradient-to-r from-maxitOrange to-maxitOrangeLight rounded-xl shadow-maxit p-6 mb-8 flex items-center justify-between">
+        <div>
+            <h3 class="text-lg font-semibold text-white mb-1">Mon solde</h3>
+            <div id="soldeMontant" class="text-3xl font-bold text-white">
+              <?php echo isset(
+                $solde) ? number_format($solde, 0, ',', ' ') . ' FCFA' : '0 FCFA'; ?>
+            </div>
+            <p class="text-xs text-orange-100 mt-1">Téléphone : <span class="font-bold"><?php echo htmlspecialchars($telephone ?? ''); ?></span></p>
+            <p class="text-xs text-orange-100 mt-1">Mis à jour le <span id="dateUpdate"></span></p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button id="toggleSolde" class="bg-white text-maxitOrange font-semibold px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight hover:text-white transition flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Masquer le solde
+            </button>
+        </div>
+    </div>
 
         <!-- Liste des transactions -->
         <div class="bg-white rounded-xl shadow-maxit p-8 w-full">
@@ -122,7 +221,6 @@
                     </button>
                 </div>
             </div>
-            
             <form method="get" class="flex items-center space-x-4 mb-4">
     <div>
         <label for="filter_date" class="text-sm text-gray-700 mr-2">Date :</label>
@@ -154,7 +252,6 @@
                         </tr>
                     </thead>
                             <?php
-$transactions = $_SESSION['transactions'] ?? [];
 if (isset($_GET['filter_date']) && $_GET['filter_date']) {
     $transactions = array_filter($transactions, function($t) {
         $date = $t['date'] instanceof \DateTime ? $t['date']->format('Y-m-d') : substr($t['date'], 0, 10);

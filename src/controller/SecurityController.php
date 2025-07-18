@@ -48,7 +48,7 @@ class SecurityController extends AbstractController
   public function destroy(): void
   {
     $this->session->unset('user');
-    header('Location:' . BASE_URL . 'login');
+    header('Location:' . BASE_URL);
     exit();
   }
 
@@ -96,16 +96,20 @@ class SecurityController extends AbstractController
       $session->unset('errors');
       $session->unset('old_input');
       $session->unset('login_error');
-
-      $service = App::getDependency('compteService');
-      $session->set('solde', $service->getSoldeUserPrincipal($user));
-      $transactionService = App::getDependency('transactionService');
-      // dump_die($tran sactionRepo->getLastTenTransactions($user));
-      // $session->set('transactions', $transactionService->getLastTenTransaction($user)->toArray());
-      $transactions = $transactionService->getLastTenTransaction($user);
-      $session->set('transactions', array_map(fn($t) => $t->toArray(), $transactions));
-
+// technique
+//      $service = App::getDependency('compteService');
+//      $session->set('solde', $service->getSoldeUserPrincipal($user));
+//      $transactionService = App::getDependency('transactionService');
+//      // dump_die($tran sactionRepo->getLastTenTransactions($user));
+//      // $session->set('transactions', $transactionService->getLastTenTransaction($user)->toArray());
+//      $transactions = $transactionService->getLastTenTransaction($user);
+//      $transactions = array_map(fn($t) => $t->toArray(), $transactions);
+//
+//      parent::renderHTML('compte/list_compte.html.php', ['transactions' => $transactions,'solde' => $service->getSoldeUserPrincipal($user)]);
+      // $session->set('transactions', array_map(fn($t) => $t->toArray(), $transactions));
+//fin simulation
       // dump_die($transactionService->getLastTenTransaction($user));
+        $this->handleSuccessfulLogin($user);
       header('Location:' . BASE_URL . 'compte');
       exit();
     } else {
@@ -222,4 +226,36 @@ class SecurityController extends AbstractController
       parent::renderHTML('utilisateur/inscription.html.php');
     }
   }
+
+    private function handleSuccessfulLogin(Utilisateur $user): void
+    {
+        $session = $this->session;
+
+        // Enregistrement de l'utilisateur connecté
+        $session->set('user', $user->toArray());
+
+        // Nettoyage des anciennes erreurs
+        $session->unset('errors');
+        $session->unset('old_input');
+        $session->unset('login_error');
+
+        // Récupération du solde principal
+        /** @var CompteService $compteService */
+        $compteService = App::getDependency('compteService');
+        $solde = $compteService->getSoldeUserPrincipal($user);
+        $session->set('solde', $solde);
+
+        // Récupération des 10 dernières transactions
+        /** @var TransactionService $transactionService */
+        $transactionService = App::getDependency('transactionService');
+        $transactions = $transactionService->getLastTenTransaction($user);
+        $transactionsArray = array_map(fn($t) => $t->toArray(), $transactions);
+
+        // Redirection ou affichage (selon si header peut être envoyé)
+        $this->renderHTML('compte/list_compte.html.php', [
+            'transactions' => $transactionsArray,
+            'solde' => $solde
+        ]);
+    }
+
 }

@@ -28,7 +28,7 @@ CREATE TABLE compte (
     id SERIAL PRIMARY KEY,
     client_id INT NOT NULL,
     montant NUMERIC(15, 2) NOT NULL,
-    telephones VARCHAR(14)[] NOT NULL,
+    telephone VARCHAR(14) UNIQUE NOT NULL,
     CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES utilisateur(id)
 );
 

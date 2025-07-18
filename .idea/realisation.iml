@@ -10,7 +10,8 @@
       <sourceFolder url="file://$MODULE_DIR$/src/service" isTestSource="false" packagePrefix="App\Service\" />
       <sourceFolder url="file://$MODULE_DIR$/app/core/abstract" isTestSource="false" packagePrefix="App\Config\Abstract\" />
       <sourceFolder url="file://$MODULE_DIR$/src/enum" isTestSource="false" packagePrefix="App\Enum\" />
-      <sourceFolder url="file://$MODULE_DIR$/spec" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/enum/transalate/fr" isTestSource="false" packagePrefix="App\Translate\" />
+      <sourceFolder url="file://$MODULE_DIR$/app/core/validator" isTestSource="false" packagePrefix="App\Validator\" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/composer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/graham-campbell/result-type" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phpoption/phpoption" />

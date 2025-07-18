@@ -12,12 +12,13 @@ $routes = [
     'controller' => SecurityController::class,
     'method' => 'inscrire',
     'middleware' => [
-      \App\Config\middlewares\CryptPassword::class // Tableau plat
+      \App\Config\middlewares\CryptPassword::class
     ]
   ],
   '/compte' => ['controller' => CompteController::class, 'method' => 'show'],
   '/compte/solde' => ['controller' => CompteController::class, 'method' => 'solde'],
-  '/logout' => ['controller' => SecurityController::class, 'method' => 'destroy'],
+  '/compte/ajouter-secondaire' => ['controller' => CompteController::class, 'method' => 'ajouterSecondaire'],
+  '/compte/changer-compte' => ['controller' => CompteController::class, 'method' => 'changerCompte'],
 
 ];
 

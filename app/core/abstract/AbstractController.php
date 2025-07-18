@@ -27,4 +27,5 @@ abstract class AbstractController
     // Inclure le layout approprié
     require_once __DIR__ . "/../../../templates/layout/{$this->layout}.layout.php";
   }
+
 }

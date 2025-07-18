@@ -25,7 +25,7 @@ class CompteService
   public function getSoldeUserPrincipal(Utilisateur $utilisateur): float
   {
     $repo = App::getDependency('compteRepository');
-
-    return $repo->getSoldeByUserId($utilisateur->getId());
+    $solde = $repo->getSoldeByUserId($utilisateur->getId());
+    return $solde !== null ? $solde : 0.0;
   }
 }

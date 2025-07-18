@@ -7,10 +7,12 @@
       "App\\Repository\\": "src/repository/",
       "App\\Service\\": "src/service/",
       "App\\Enum\\": "src/enum/",
+      "App\\Translate\\": "src/enum/transalate/fr/",
       "App\\Controller\\": "src/controller/",
       "App\\Core\\": "app/config/",
       "App\\Config\\" : "app/core/",
-      "App\\Config\\Abstract\\" : "app/core/abstract"
+      "App\\Config\\Abstract\\" : "app/core/abstract",
+      "App\\Validator\\" : "app/core/validator"
 
     },
     "files" : [
