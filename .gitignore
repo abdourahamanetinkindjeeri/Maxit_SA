@@ -1,5 +1,4 @@
 .env
-.env copy
 test/
 vendor/
 composer.lock
