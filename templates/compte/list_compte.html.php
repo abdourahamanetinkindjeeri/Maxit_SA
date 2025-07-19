@@ -174,7 +174,7 @@
         const btnAddSecondary = document.getElementById('btnAddSecondary');
         const modalAddSecondary = document.getElementById('modalAddSecondary');
         const closeModalAddSecondary = document.getElementById('closeModalAddSecondary');
-        btnAddSecondary.addEventListener('click', () => {   
+        btnAddSecondary.addEventListener('click', () => {
             modalAddSecondary.classList.remove('hidden');
         });
         closeModalAddSecondary.addEventListener('click', () => {
