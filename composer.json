@@ -13,11 +13,16 @@
       "App\\Config\\": "app/config/",
       "App\\Core\\Abstract\\": "app/core/abstract",
       "App\\Core\\Middlewares\\": "app/core/middlewares",
-      "App\\Validator\\": "app/core/validator"
+      "App\\Validator\\": "app/core/validator",
+      "App\\Migration\\": "migrations/"
     },
     "files": [
       "app/config/helpers.php"
     ]
+  },
+  "scripts": {
+    "database:migrate": "php migrations/migration.php",
+    "database:seed": "php migrations/seeders/seeder.php"
   },
   "authors": [
     {
