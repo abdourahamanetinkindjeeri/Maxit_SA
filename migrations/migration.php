@@ -15,7 +15,10 @@ use function App\Config\dump_die;
 function prompt(string $label, bool $hidden = false): string
 {
   echo $label;
-
+  // Si on n'est pas dans un terminal interactif, ne pas tenter de cacher le mot de passe
+  if ($hidden && function_exists('posix_isatty') && !posix_isatty(STDIN)) {
+    $hidden = false;
+  }
   if ($hidden) {
     if (strncasecmp(PHP_OS, 'WIN', 3) === 0) {
       $vbscript = sys_get_temp_dir() . '/prompt_password.vbs';
@@ -31,25 +34,36 @@ function prompt(string $label, bool $hidden = false): string
     }
     return $password;
   }
-
   return rtrim(fgets(STDIN), "\n");
 }
 
 function askDatabaseCredentials(): array
 {
-  $dbName = prompt("📝 Nom de la base de données: ");
-  $user = prompt("👤 Utilisateur de la base: ");
-  $pass = prompt("🔑 Mot de passe: ", true);
-  $host = prompt("📝 Hôte de la base de données (localhost): ");
-  $port = prompt("📝 Port (5432): ");
+  // Lire d'abord les variables d'environnement
+  $env = [
+    'DB_HOST' => getenv('DB_HOST') ?: '',
+    'DB_PORT' => getenv('DB_PORT') ?: '',
+    'DB_NAME' => getenv('DB_NAME') ?: '',
+    'DB_USER' => getenv('DB_USER') ?: '',
+    'DB_PASSWORD' => getenv('DB_PASSWORD') ?: '',
+  ];
+
+  $host = $env['DB_HOST'] ?: prompt("📝 Hôte de la base de données (localhost): ");
+  $port = $env['DB_PORT'] ?: prompt("📝 Port (3306 pour MySQL, 5432 pour PostgreSQL): ");
+  $dbName = $env['DB_NAME'] ?: prompt("📝 Nom de la base de données: ");
+  $user = $env['DB_USER'] ?: prompt("👤 Utilisateur de la base: ");
+  $pass = $env['DB_PASSWORD'];
+  if ($pass === '') {
+    // Si on est dans un terminal, prompt caché, sinon prompt normal
+    $pass = prompt("🔑 Mot de passe: ", function_exists('posix_isatty') && posix_isatty(STDIN));
+  }
 
   return [
     'DB_HOST' => $host ?: 'localhost',
-    'DB_PORT' => $port ?: '5432',
+    'DB_PORT' => $port ?: '3306',
     'DB_NAME' => $dbName,
     'DB_USER' => $user,
-    'DB_PASSWORD' => $pass,
-    'DSN' => DSN
+    'DB_PASSWORD' => $pass
   ];
 }
 
@@ -68,8 +82,9 @@ function writeEnvFile(array $config, string $path = __DIR__ . '/../.env'): void
   foreach ($config as $key => $value) {
     $lines[] = "$key=$value";
   }
-  file_put_contents($path, implode(PHP_EOL, $lines) . PHP_EOL, FILE_APPEND); // ajoute à la fin
-  echo "✅ Variables ajoutées à la fin du fichier .env : $path\n";
+
+  file_put_contents($path, implode(PHP_EOL, $lines) . PHP_EOL);
+  echo "✅ Fichier .env généré à : $path\n";
 }
 
 // --- PHASE 1 : Récupération des infos

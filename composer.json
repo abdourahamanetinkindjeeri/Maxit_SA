@@ -22,7 +22,7 @@
   },
   "scripts": {
     "database:migrate": "php migrations/migration.php",
-    "database:seed": "php migrations/seeders/seeder.php"
+    "database:seed": "php migrations/Seeder.php"
   },
   "authors": [
     {
