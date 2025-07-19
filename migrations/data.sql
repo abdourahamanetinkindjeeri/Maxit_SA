@@ -12,9 +12,10 @@ INSERT INTO utilisateur (nom, prenom, login, password, cni, cni_recto, cni_verso
 ('Traoré', 'Fatoumata', 'fatou.tr@gmail.com', 'pass123', '2020987654321', 'fatou_recto.png', 'fatou_verso.png', 3);
 
 -- Insertion des comptes
-INSERT INTO compte (client_id, montant, telephones) VALUES
-(4, 250000.00, ARRAY['+221770000001', '+221770000002']),
-(5, 150000.00, ARRAY['+221771234567']);
+INSERT INTO compte (client_id, montant, telephone) VALUES
+(4, 250000.00, '+221770000001'),
+(4, 100000.00, '+221770000002'),
+(5, 150000.00, '+221771234567');
 
 -- Insertion des transactions
 INSERT INTO transaction (utilisateur_id, compte_id, montant, type_transaction) VALUES

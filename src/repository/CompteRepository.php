@@ -8,6 +8,8 @@ use App\Entity\Compte;
 use App\Entity\Utilisateur;
 use \PDO;
 
+use function App\Config\dump_die;
+
 class CompteRepository extends AbstractRepository
 {
 
@@ -174,5 +176,92 @@ class CompteRepository extends AbstractRepository
       return (float)$compte['montant'];
     }
     return null;
+  }
+
+  /**
+   * Récupère tous les comptes d'un utilisateur par son ID
+   */
+  public function getComptesByUserId(int $userId): array
+  {
+    $sql = "SELECT * FROM {$this->table} WHERE client_id = :user_id";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['user_id' => $userId]);
+
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return array_map(fn($row) => Compte::toObject($row), $results);
+  }
+
+  /**
+   * Crée un compte secondaire pour un utilisateur
+   */
+  public function creerCompteSecondaire(int $userId, string $telephone, float $solde): bool
+  {
+    try {
+      $sql = "INSERT INTO {$this->table} (client_id, montant, telephone) 
+              VALUES (:client_id, :montant, :telephone)";
+      $stmt = $this->db->prepare($sql);
+      $stmt->bindValue(':client_id', $userId, PDO::PARAM_INT);
+      $stmt->bindValue(':montant', $solde);
+      $stmt->bindValue(':telephone', $telephone, PDO::PARAM_STR);
+      return $stmt->execute();
+    } catch (\PDOException $e) {
+      error_log("Erreur création compte secondaire: " . $e->getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Met à jour le solde du compte principal d'un utilisateur
+   */
+  public function updateSoldeComptePrincipal(int $userId, float $nouveauSolde): bool
+  {
+    try {
+      $sql = "UPDATE {$this->table} SET montant = :montant WHERE client_id = :user_id";
+      $stmt = $this->db->prepare($sql);
+      $stmt->bindValue(':montant', $nouveauSolde);
+      $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+      return $stmt->execute();
+    } catch (\PDOException $e) {
+      error_log("Erreur mise à jour solde compte principal: " . $e->getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Récupère le compte principal d'un utilisateur
+   */
+  public function getComptePrincipal(int $userId): ?Compte
+  {
+    $sql = "SELECT * FROM {$this->table} WHERE client_id = :user_id LIMIT 1";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['user_id' => $userId]);
+    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($data === false) {
+      return null;
+    }
+
+    return Compte::toObject($data);
+  }
+
+  /**
+   * Récupère tous les comptes d'un client avec les informations utilisateur
+   */
+  public function getComptesClientAvecUtilisateur(int $userId): array
+  {
+    // Test avec une requête simple d'abord
+    $sql = "SELECT * FROM {$this->table} WHERE client_id = :user_id";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['user_id' => $userId]);
+
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Debug temporaire
+    error_log("Repository - User ID: " . $userId);
+    error_log("Repository - SQL: " . $sql);
+    error_log("Repository - Results: " . print_r($results, true));
+
+    return array_map(fn($row) => Compte::toObject($row), $results);
   }
 }

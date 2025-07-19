@@ -6,6 +6,8 @@ use App\Core\Abstract\AbstractController;
 use App\Repository\CompteRepository;
 use App\Core\App;
 use App\Translate\MessageErreur;
+use App\Service\CompteService;
+use function App\Config\dump_die;
 
 class CompteController extends AbstractController
 {
@@ -18,8 +20,14 @@ class CompteController extends AbstractController
       exit();
     }
 
-    $compteRepo = CompteRepository::getInstance();
-    $comptes = $compteRepo->getAllComptesWithUsers($user['id']);
+    $compteService = CompteService::getInstance();
+    $comptes = $compteService->getComptesClientAvecUtilisateur($user['id']);
+
+    // Debug temporaire pour voir les comptes
+    error_log("User ID: " . $user['id']);
+    error_log("Comptes count: " . count($comptes));
+    error_log("Comptes: " . print_r($comptes, true));
+
     // Compte courant (par défaut le premier)
     if (!$this->session->isset('compte_courant_id') && count($comptes) > 0) {
       $this->session->set('compte_courant_id', $comptes[0]->getId());
@@ -40,13 +48,46 @@ class CompteController extends AbstractController
     $transactionService = \App\Service\TransactionService::getInstance();
     $userEntity = \App\Entity\Utilisateur::toObject($user);
     $transactions = $transactionService->getLastTenTransaction($userEntity);
+
+    // Appliquer les filtres si présents
+    $filterDate = $_GET['filter_date'] ?? '';
+    $filterType = $_GET['filter_type'] ?? '';
+
+    if ($filterDate || $filterType) {
+      $transactions = array_filter($transactions, function ($transaction) use ($filterDate, $filterType) {
+        $transactionArray = $transaction->toArray();
+
+        // Filtre par date
+        if ($filterDate) {
+          $transactionDate = $transactionArray['date'] instanceof \DateTime
+            ? $transactionArray['date']->format('Y-m-d')
+            : substr($transactionArray['date'], 0, 10);
+          if ($transactionDate !== $filterDate) {
+            return false;
+          }
+        }
+
+        // Filtre par type
+        if ($filterType) {
+          $transactionType = $transactionArray['typeTransaction']->value ?? '';
+          if ($transactionType !== $filterType) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+    }
+
     $data = [
       'user' => $user,
       'solde' => $solde,
       'telephone' => $telephone,
       'transactions' => array_map(fn($t) => $t->toArray(), $transactions),
       'comptes' => $comptes,
-      'compte_courant_id' => $compteCourant ? $compteCourant->getId() : null
+      'compte_courant_id' => $compteCourant ? $compteCourant->getId() : null,
+      'filter_date' => $filterDate,
+      'filter_type' => $filterType
     ];
     parent::renderHTML('compte/list_compte.html.php', $data);
   }
@@ -77,71 +118,107 @@ class CompteController extends AbstractController
     // TODO: Implement store() method.
   }
 
-  // public function ajouterSecondaire(): void
-  // {
-  //   $user = $this->session->get('user');
-  //   if (!$user) {
-  //     header('Location:' . BASE_URL . 'login');
-  //     exit();
-  //   }
-  //   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  //     $telephone = trim($_POST['numero'] ?? '');
-  //     $solde = isset($_POST['solde']) && is_numeric($_POST['solde']) ? (float)$_POST['solde'] : 0.0;
-  //     $errors = [];
-  //     if (!$telephone) {
-  //       $errors[] = 'Le numéro du compte secondaire est obligatoire.';
-  //     }
-  //     if ($solde < 0) {
-  //       $errors[] = 'Le solde initial ne peut pas être négatif.';
-  //     }
-  //     $compteRepo = CompteRepository::getInstance();
-  //     // Vérifier unicité du numéro pour cet utilisateur
-  //     // $comptes = $compteRepo->getComptesByUserId($user['id']);
-  //     foreach ($comptes as $c) {
-  //       if ($c->getTelephone() === $telephone) {
-  //         $errors[] = 'Ce numéro existe déjà pour cet utilisateur.';
-  //         break;
-  //       }
-  //     }
-  //     if ($errors) {
-  //       $this->session->set('add_secondary_errors', $errors);
-  //       header('Location:' . BASE_URL . 'compte');
-  //       exit();
-  //     }
-  //     $ok = $compteRepo->creerCompteSecondaire($user['id'], $telephone, $solde);
-  //     if ($ok) {
-  //       $this->session->set('add_secondary_success', 'Compte secondaire ajouté avec succès.');
-  //     } else {
-  //       $this->session->set('add_secondary_errors', ['Erreur lors de la création du compte secondaire.']);
-  //     }
-  //     header('Location:' . BASE_URL . 'compte');
-  //     exit();
-  //   }
-  //   header('Location:' . BASE_URL . 'compte');
-  //   exit();
-  // }
+  public function ajouterSecondaire(): void
+  {
+    $user = $this->session->get('user');
+    if (!$user) {
+      header('Location:' . BASE_URL . 'login');
+      exit();
+    }
 
-  // public function changerCompte(): void
-  // {
-  //   $user = $this->session->get('user');
-  //   if (!$user) {
-  //     header('Location:' . BASE_URL . 'login');
-  //     exit();
-  //   }
-  //   if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['compte_id'])) {
-  //     $compteId = (int)$_POST['compte_id'];
-  //     $compteRepo = CompteRepository::getInstance();
-  //     $comptes = $compteRepo->getComptesByUserId($user['id']);
-  //     foreach ($comptes as $c) {
-  //       if ($c->getId() === $compteId) {
-  //         $this->session->set('compte_courant_id', $compteId);
-  //         break;
-  //       }
-  //     }
-  //   }
-  //   header('Location:' . BASE_URL . 'compte');
-  //   exit();
-  // }
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+      $telephone = trim($_POST['numero'] ?? '');
+      $solde = isset($_POST['solde']) && is_numeric($_POST['solde']) ? (float)$_POST['solde'] : 0.0;
+
+      // Utilisation du service pour la validation et la création
+      $compteService = CompteService::getInstance();
+
+      // Validation des données
+      $errors = $compteService->validerDonneesCompteSecondaire($telephone, $solde);
+
+      // Vérification de l'unicité du numéro de téléphone
+      if (empty($errors) && !$compteService->verifierUniciteTelephone($user['id'], $telephone)) {
+        $errors[] = 'Ce numéro existe déjà pour cet utilisateur.';
+      }
+
+      if ($errors) {
+        $this->session->set('add_secondary_errors', $errors);
+        header('Location:' . BASE_URL . 'compte');
+        exit();
+      }
+
+      // Création du compte secondaire via le service
+      $result = $compteService->creerCompteSecondaire($user['id'], $telephone, $solde);
+
+      if ($result['success']) {
+        $this->session->set('add_secondary_success', $result['message']);
+      } else {
+        $this->session->set('add_secondary_errors', [$result['message']]);
+      }
+
+      header('Location:' . BASE_URL . 'compte');
+      exit();
+    }
+
+    header('Location:' . BASE_URL . 'compte');
+    exit();
+  }
+
+  public function changerCompte(): void
+  {
+    $user = $this->session->get('user');
+    if (!$user) {
+      header('Location:' . BASE_URL . 'login');
+      exit();
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['compte_id'])) {
+      $compteId = (int)$_POST['compte_id'];
+      $compteService = CompteService::getInstance();
+
+      // Utiliser le service pour changer de compte
+      $result = $compteService->changerCompte($user['id'], $compteId);
+
+      if ($result['success']) {
+        $this->session->set('compte_courant_id', $compteId);
+        $this->session->set('change_account_success', $result['message']);
+      } else {
+        $this->session->set('change_account_errors', [$result['message']]);
+      }
+    }
+
+    header('Location:' . BASE_URL . 'compte');
+    exit();
+  }
+
+  public function getComptesAjax(): void
+  {
+    $user = $this->session->get('user');
+    if (!$user) {
+      http_response_code(401);
+      echo json_encode(['error' => 'Non autorisé']);
+      exit();
+    }
+
+    $compteService = CompteService::getInstance();
+    $comptes = $compteService->getComptesClientAvecUtilisateur($user['id']);
+
+    $comptesArray = [];
+    foreach ($comptes as $compte) {
+      $comptesArray[] = [
+        'id' => $compte->getId(),
+        'telephone' => $compte->getTelephone(),
+        'montant' => $compte->getMontant(),
+        'isPrincipal' => $compte->getId() == ($comptes[0]->getId() ?? null)
+      ];
+    }
+
+    header('Content-Type: application/json');
+    echo json_encode(['comptes' => $comptesArray]);
+    exit();
+  }
+
+
 
   /**
    * Affiche le solde d'un utilisateur spécifique

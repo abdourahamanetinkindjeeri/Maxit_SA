@@ -98,12 +98,12 @@
             <button id="btnAddSecondary" class="bg-maxitOrange text-white px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight transition font-semibold">
                 + Ajouter un compte secondaire
             </button>
-            <button id="btnChangeAccount" class="bg-white text-maxitOrange font-semibold px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight hover:text-white transition flex items-center">
+            <a href="#" id="btnChangeAccount" class="bg-white text-maxitOrange font-semibold px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight hover:text-white transition flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 17v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12v9m0 0l-3-3m3 3l3-3" />
                 </svg>
                 Changer de compte
-            </button>
+            </a>
         </div>
     </div>
     <?php if (!empty($_SESSION['add_secondary_errors'])): ?>
@@ -118,6 +118,19 @@
             <?php echo htmlspecialchars($_SESSION['add_secondary_success']); unset($_SESSION['add_secondary_success']); ?>
         </div>
     <?php endif; ?>
+    <?php if (!empty($_SESSION['change_account_success'])): ?>
+        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+            <?php echo htmlspecialchars($_SESSION['change_account_success']); unset($_SESSION['change_account_success']); ?>
+        </div>
+    <?php endif; ?>
+    <?php if (!empty($_SESSION['change_account_errors'])): ?>
+        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <?php foreach ($_SESSION['change_account_errors'] as $err): ?>
+                <div><?php echo htmlspecialchars($err); ?></div>
+            <?php endforeach; unset($_SESSION['change_account_errors']); ?>
+        </div>
+    <?php endif; ?>
+
     <!-- Modal d'ajout de compte secondaire -->
     <div id="modalAddSecondary" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
@@ -141,17 +154,14 @@
     <!-- Modal de changement de compte -->
     <div id="modalChangeAccount" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+
             <button id="closeModalChangeAccount" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
             <h2 class="text-xl font-bold mb-4 text-gray-800">Changer de compte</h2>
             <form method="post" action="<?php echo BASE_URL; ?>compte/changer-compte">
                 <div class="mb-4">
                     <label class="block text-gray-700 font-semibold mb-2">Sélectionnez un numéro :</label>
-                    <select name="compte_id" class="w-full border rounded px-3 py-2" required>
-                        <?php foreach (($comptes ?? []) as $c): ?>
-                            <option value="<?php echo $c->getId(); ?>" <?php if($c->getId() == ($compte_courant_id ?? null)) echo 'selected'; ?>>
-                                <?php echo htmlspecialchars($c->getTelephone()); ?><?php if($c->getId() == ($comptes[0]->getId() ?? null)) echo ' (principal)'; ?>
-                            </option>
-                        <?php endforeach; ?>
+                    <select name="compte_id" id="compteSelect" class="w-full border rounded px-3 py-2" required>
+                        <option value="">Chargement des comptes...</option>
                     </select>
                 </div>
                 <div class="flex justify-end">
@@ -175,20 +185,50 @@
                 modalAddSecondary.classList.add('hidden');
             }
         });
+
         const btnChangeAccount = document.getElementById('btnChangeAccount');
         const modalChangeAccount = document.getElementById('modalChangeAccount');
         const closeModalChangeAccount = document.getElementById('closeModalChangeAccount');
+        const compteSelect = document.getElementById('compteSelect');
+        
         btnChangeAccount.addEventListener('click', () => {
             modalChangeAccount.classList.remove('hidden');
+            // Charger les comptes quand le modal s'ouvre
+            loadComptes();
         });
+        
         closeModalChangeAccount.addEventListener('click', () => {
             modalChangeAccount.classList.add('hidden');
         });
+        
         window.addEventListener('click', (e) => {
             if (e.target === modalChangeAccount) {
                 modalChangeAccount.classList.add('hidden');
             }
         });
+        
+        // Fonction pour charger les comptes via AJAX
+        function loadComptes() {
+            fetch('<?php echo BASE_URL; ?>compte/get-comptes-ajax')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.comptes && data.comptes.length > 0) {
+                        compteSelect.innerHTML = '<option value="">Sélectionnez un compte</option>';
+                        data.comptes.forEach(compte => {
+                            const option = document.createElement('option');
+                            option.value = compte.id;
+                            option.textContent = compte.telephone + (compte.isPrincipal ? ' (principal)' : '');
+                            compteSelect.appendChild(option);
+                        });
+                    } else {
+                        compteSelect.innerHTML = '<option value="">Aucun compte disponible</option>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur lors du chargement des comptes:', error);
+                    compteSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+                });
+        }
     </script>
     <!-- Solde de l'utilisateur connecté -->
     <div id="soldeSection" class="bg-gradient-to-r from-maxitOrange to-maxitOrangeLight rounded-xl shadow-maxit p-6 mb-8 flex items-center justify-between">
@@ -216,27 +256,30 @@
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-lg font-semibold text-gray-800">Historique des transactions</h2>
                 <div class="flex items-center space-x-2">
-                    <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded shadow text-sm">
+                    <a href="<?php echo BASE_URL; ?>transactions" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded shadow text-sm inline-block">
                         Voir plus
-                    </button>
+                    </a>
                 </div>
             </div>
-            <form method="get" class="flex items-center space-x-4 mb-4">
+            <form method="get" action="<?php echo BASE_URL; ?>compte" class="flex items-center space-x-4 mb-4">
     <div>
         <label for="filter_date" class="text-sm text-gray-700 mr-2">Date :</label>
         <input type="date" id="filter_date" name="filter_date" class="border rounded px-2 py-1 text-sm"
-            value="<?php echo isset($_GET['filter_date']) ? htmlspecialchars($_GET['filter_date']) : ''; ?>">
+            value="<?php echo htmlspecialchars($filter_date ?? ''); ?>">
     </div>
     <div>
         <label for="filter_type" class="text-sm text-gray-700 mr-2">Type :</label>
         <select id="filter_type" name="filter_type" class="border rounded px-2 py-1 text-sm">
             <option value="">Tous</option>
-            <option value="DEPOT" <?php if(isset($_GET['filter_type']) && $_GET['filter_type']=='DEPOT') echo 'selected'; ?>>Dépôt</option>
-            <option value="RETRAIT" <?php if(isset($_GET['filter_type']) && $_GET['filter_type']=='RETRAIT') echo 'selected'; ?>>Retrait</option>
-            <option value="PAIEMENT" <?php if(isset($_GET['filter_type']) && $_GET['filter_type']=='PAIEMENT') echo 'selected'; ?>>Paiement</option>
+            <option value="DEPOT" <?php if(($filter_type ?? '') == 'DEPOT') echo 'selected'; ?>>Dépôt</option>
+            <option value="RETRAIT" <?php if(($filter_type ?? '') == 'RETRAIT') echo 'selected'; ?>>Retrait</option>
+            <option value="PAIEMENT" <?php if(($filter_type ?? '') == 'PAIEMENT') echo 'selected'; ?>>Paiement</option>
         </select>
     </div>
     <button type="submit" class="bg-maxitOrange text-white px-4 py-2 rounded hover:bg-maxitOrangeLight text-sm">Filtrer</button>
+    <?php if ($filter_date || $filter_type): ?>
+        <a href="<?php echo BASE_URL; ?>compte" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm">Réinitialiser</a>
+    <?php endif; ?>
 </form>
 
             <div class="overflow-x-auto w-full">
@@ -247,64 +290,78 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                           
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
-                            <?php
-if (isset($_GET['filter_date']) && $_GET['filter_date']) {
-    $transactions = array_filter($transactions, function($t) {
-        $date = $t['date'] instanceof \DateTime ? $t['date']->format('Y-m-d') : substr($t['date'], 0, 10);
-        return $date === $_GET['filter_date'];
-    });
-}
-if (isset($_GET['filter_type']) && $_GET['filter_type']) {
-    $transactions = array_filter($transactions, function($t) {
-        return (isset($t['typeTransaction']) && $t['typeTransaction'] instanceof \App\Enum\TypeTransaction)
-            ? $t['typeTransaction']->value === $_GET['filter_type']
-            : false;
-    });
-}
-?>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <?php if (empty($transactions)): ?>
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    <?php if ($filter_date || $filter_type): ?>
+                                        Aucune transaction trouvée avec les filtres sélectionnés.
+                                    <?php else: ?>
+                                        Aucune transaction disponible.
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php else: ?>
                             <?php foreach ($transactions as $index => $transaction): ?>
- <tr>
-     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800"><?php echo $index + 1; ?></td>
-     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium <?php 
-         $type = $transaction['typeTransaction']->value;
-         if ($type === 'DEPOT') {
-             echo 'text-green-600';
-         } elseif (in_array($type, ['RETRAIT', 'PAIEMENT'])) {
-             echo 'text-red-600';
-         } else {
-             echo 'text-gray-800';
-         }
-     ?>">
-         <?php 
-         $type = $transaction['typeTransaction']->value;
-         $montant = $transaction['montant'];
-         if ($type === 'DEPOT') {
-             echo '+' . number_format($montant, 0, ',', ' ') . ' FCFA';
-         } elseif (in_array($type, ['RETRAIT', 'PAIEMENT'])) {
-             echo '-' . number_format($montant, 0, ',', ' ') . ' FCFA';
-         } else {
-             echo number_format($montant, 0, ',', ' ') . ' FCFA';
-         }
-         ?>
-     </td>
-           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-       <?php echo $transaction['typeTransaction']->value; ?>
-      </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-           <?php echo $transaction['date'] instanceof \DateTime ? $transaction['date']->format('d/m/Y H:i') : htmlspecialchars($transaction['date']); ?>
-       </td>
-     
-     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-         <a href="#" class="text-indigo-600 hover:text-indigo-900">Détails</a>
-     </td>
- </tr>
- <?php endforeach; ?>
-
-                  
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800"><?php echo $index + 1; ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium <?php 
+                                        $type = $transaction['typeTransaction']->value ?? '';
+                                        if ($type === 'DEPOT') {
+                                            echo 'text-green-600';
+                                        } elseif (in_array($type, ['RETRAIT', 'PAIEMENT'])) {
+                                            echo 'text-red-600';
+                                        } else {
+                                            echo 'text-gray-800';
+                                        }
+                                    ?>">
+                                        <?php 
+                                        $type = $transaction['typeTransaction']->value ?? '';
+                                        $montant = $transaction['montant'] ?? 0;
+                                        if ($type === 'DEPOT') {
+                                            echo '+' . number_format($montant, 0, ',', ' ') . ' FCFA';
+                                        } elseif (in_array($type, ['RETRAIT', 'PAIEMENT'])) {
+                                            echo '-' . number_format($montant, 0, ',', ' ') . ' FCFA';
+                                        } else {
+                                            echo number_format($montant, 0, ',', ' ') . ' FCFA';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full <?php 
+                                            if ($type === 'DEPOT') {
+                                                echo 'bg-green-100 text-green-800';
+                                            } elseif ($type === 'RETRAIT') {
+                                                echo 'bg-red-100 text-red-800';
+                                            } elseif ($type === 'PAIEMENT') {
+                                                echo 'bg-orange-100 text-orange-800';
+                                            } else {
+                                                echo 'bg-gray-100 text-gray-800';
+                                            }
+                                        ?>">
+                                            <?php echo htmlspecialchars($type); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                        <?php 
+                                        $date = $transaction['date'] ?? '';
+                                        if ($date instanceof \DateTime) {
+                                            echo $date->format('d/m/Y H:i');
+                                        } else {
+                                            echo htmlspecialchars($date);
+                                        }
+                                        ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                        <a href="#" class="text-indigo-600 hover:text-indigo-900">Détails</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
                 </table>
             </div>
           
