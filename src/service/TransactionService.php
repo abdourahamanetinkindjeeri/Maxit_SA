@@ -76,4 +76,67 @@ class TransactionService
       return ['success' => false, 'message' => "Erreur lors du dépôt : " . $e->getMessage()];
     }
   }
+
+  public function annulerDepot(int $transactionId, int $userId): array
+  {
+    $transactionRepo = \App\Repository\TransactionRepository::getInstance();
+    $compteRepo = \App\Repository\CompteRepository::getInstance();
+    // Récupérer la transaction
+    $db = $compteRepo->getDb();
+    $sql = "SELECT * FROM transaction WHERE id = :id";
+    $stmt = $db->prepare($sql);
+    $stmt->execute(['id' => $transactionId]);
+    $transaction = $stmt->fetch(\PDO::FETCH_ASSOC);
+    if (!$transaction) {
+      return ['success' => false, 'message' => "Transaction introuvable."];
+    }
+    if ($transaction['type_transaction'] !== 'DEPOT') {
+      return ['success' => false, 'message' => "Seuls les dépôts peuvent être annulés."];
+    }
+    if ($transaction['statut'] === 'ANNULE') {
+      return ['success' => false, 'message' => "Cette transaction est déjà annulée."];
+    }
+    if ((int)$transaction['utilisateur_id'] !== $userId) {
+      return ['success' => false, 'message' => "Vous ne pouvez annuler que vos propres dépôts."];
+    }
+    $compteReceveurId = (int)$transaction['compte_id'];
+    $montant = (float)$transaction['montant'];
+    // Trouver le compte source (celui qui a fait le dépôt)
+    // Ici, on suppose que le compte courant au moment du dépôt est le compte source
+    // Pour l'annulation, on crédite ce compte (userId doit posséder ce compte)
+    // On va chercher le compte courant de l'utilisateur au moment de l'annulation
+    $comptes = $compteRepo->getComptesByUserId($userId);
+    $compteSource = null;
+    foreach ($comptes as $c) {
+      if ($c->getId() != $compteReceveurId) {
+        $compteSource = $c;
+        break;
+      }
+    }
+    if (!$compteSource) {
+      return ['success' => false, 'message' => "Impossible de retrouver le compte source."];
+    }
+    // Vérifier que le compte receveur a encore le montant
+    $compteReceveur = null;
+    foreach ($comptes as $c) {
+      if ($c->getId() == $compteReceveurId) {
+        $compteReceveur = $c;
+        break;
+      }
+    }
+    if (!$compteReceveur || $compteReceveur->getMontant() < $montant) {
+      return ['success' => false, 'message' => "Le montant n'est plus disponible sur le compte receveur."];
+    }
+    try {
+      $db->beginTransaction();
+      $compteRepo->updateSoldeCompte($compteReceveurId, $compteReceveur->getMontant() - $montant);
+      $compteRepo->updateSoldeCompte($compteSource->getId(), $compteSource->getMontant() + $montant);
+      $transactionRepo->annulerDepot($transactionId);
+      $db->commit();
+      return ['success' => true, 'message' => "Dépôt annulé avec succès."];
+    } catch (\Exception $e) {
+      $db->rollBack();
+      return ['success' => false, 'message' => "Erreur lors de l'annulation : " . $e->getMessage()];
+    }
+  }
 }

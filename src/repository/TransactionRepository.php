@@ -110,4 +110,11 @@ class TransactionRepository extends AbstractRepository
       'montant' => $montant
     ]);
   }
+
+  public function annulerDepot(int $transactionId): bool
+  {
+    $sql = "UPDATE transaction SET statut = 'ANNULE' WHERE id = :id";
+    $stmt = $this->db->prepare($sql);
+    return $stmt->execute(['id' => $transactionId]);
+  }
 }

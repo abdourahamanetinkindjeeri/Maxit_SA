@@ -268,6 +268,29 @@ class CompteController extends AbstractController
     parent::renderHTML('compte/depot.html.php', ['comptes' => $comptes, 'compte_courant_id' => $compteCourantId]);
   }
 
+  public function annulerDepot(): void
+  {
+    $user = $this->session->get('user');
+    if (!$user) {
+      header('Location:' . BASE_URL . 'login');
+      exit();
+    }
+    if (!isset($_GET['id'])) {
+      $this->session->set('depot_error', "ID de transaction manquant.");
+      header('Location:' . BASE_URL . 'compte');
+      exit();
+    }
+    $transactionId = (int)$_GET['id'];
+    $transactionService = \App\Service\TransactionService::getInstance();
+    $result = $transactionService->annulerDepot($transactionId, $user['id']);
+    if ($result['success']) {
+      $this->session->set('depot_success', $result['message']);
+    } else {
+      $this->session->set('depot_error', $result['message']);
+    }
+    header('Location:' . BASE_URL . 'compte');
+    exit();
+  }
 
   /**
    * Affiche le solde d'un utilisateur spécifique

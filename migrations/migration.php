@@ -94,7 +94,7 @@ function askDatabaseCredentials(): array
   $user = $env['DB_USER'] ?: prompt("👤 Utilisateur de la base: ");
   $pass = $env['DB_PASSWORD'];
   if ($pass === '') {
-    $pass = prompt("🔑 Mot de passe: ", function_exists('posix_isatty') && posix_isatty(STDIN));
+    $pass = prompt("Mot de passe: ", function_exists('posix_isatty') && posix_isatty(STDIN));
   }
 
   $driver = detectDriver($port);
@@ -132,7 +132,7 @@ function writeEnvFile(array $config, string $path = __DIR__ . '/../.env'): void
   }
 
   file_put_contents($path, implode(PHP_EOL, $lines) . PHP_EOL);
-  echo "✅ Fichier .env généré à : $path\n";
+  echo "Fichier .env généré à : $path\n";
 }
 
 // --- PHASE 1 : Récupération des infos
@@ -165,16 +165,16 @@ try {
     $stmt = $pdo->query("SELECT 1 FROM pg_database WHERE datname = " . $pdo->quote($dbName));
     if (!$stmt->fetch()) {
       $pdo->exec("CREATE DATABASE \"$dbName\";");
-      echo "✅ Base de données \"$dbName\" créée avec succès (PostgreSQL).\n";
+      echo "Base de données \"$dbName\" créée avec succès (PostgreSQL).\n";
     } else {
-      echo "ℹ️ La base \"$dbName\" existe déjà.\n";
+      echo "ℹLa base \"$dbName\" existe déjà.\n";
     }
   } else {
     $pdo->exec("CREATE DATABASE IF NOT EXISTS `$dbName` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
-    echo "✅ Base de données \"$dbName\" créée avec succès (MySQL).\n";
+    echo "Base de données \"$dbName\" créée avec succès (MySQL).\n";
   }
 } catch (\PDOException $e) {
-  echo "❌ Erreur de connexion ($driver) : " . $e->getMessage() . "\n";
+  echo "Erreur de connexion ($driver) : " . $e->getMessage() . "\n";
   exit(1);
 }
 
@@ -196,7 +196,7 @@ try {
   $tableSQLs = [];
   foreach ($schemas as $table => $columns) {
     if (method_exists('App\Migration\SQLGenerator', 'generateCreateTable')) {
-      $tableSQLs[$table] = SQLGenerator::generateCreateTable($table, $columns);
+      $tableSQLs[$table] = SQLGenerator::generateCreateTable($table, $columns, $driver);
     }
   }
 
@@ -212,13 +212,15 @@ try {
 
   // 3. Créer les tables
   foreach ($tableSQLs as $table => $createTableSQL) {
-    echo "➡️ Création de la table `$table` :\n$createTableSQL\n";
+    echo "Création de la table `$table` :\n$createTableSQL\n";
     $pdo->exec($createTableSQL);
-    echo "✅ Table `$table` créée avec succès.\n";
+    echo "Table `$table` créée avec succès.\n";
   }
 
-  echo "🎉 Toutes les tables ont été créées avec succès.\n";
+  // Suppression de l'ALTER TABLE transaction pour 'statut' (déjà dans le schéma)
+
+  echo "Toutes les tables ont été créées avec succès.\n";
 } catch (\PDOException $e) {
-  echo "❌ Erreur PDO : " . $e->getMessage() . "\n";
+  echo "Erreur PDO : " . $e->getMessage() . "\n";
   exit(1);
 }

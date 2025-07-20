@@ -11,6 +11,7 @@ class Transaction extends AbstractEntity
   private int $montant;
   private \DateTime $date;
   private TypeTransaction $typeTransaction;
+  private string $statut = 'VALIDE';
 
   public function __construct(int $id = 0, int $montant = 0, string $date = '', string $type = '')
   {
@@ -22,12 +23,13 @@ class Transaction extends AbstractEntity
 
   static public function toObject(array $row): static
   {
-    return new self(
-      $row['id'],
-      $row['montant'],
-      $row['date'],
-      $row['type_transaction']
-    );
+    $obj = new self();
+    $obj->id = $row['id'];
+    $obj->montant = $row['montant'];
+    $obj->date = new \DateTime($row['date']);
+    $obj->typeTransaction = TypeTransaction::from($row['type_transaction']);
+    $obj->statut = $row['statut'] ?? 'VALIDE';
+    return $obj;
   }
 
   function toArray(): array
@@ -36,7 +38,17 @@ class Transaction extends AbstractEntity
       'id' => $this->id,
       'montant' => $this->montant,
       'date' => $this->date,
-      'typeTransaction' => $this->typeTransaction
+      'typeTransaction' => $this->typeTransaction,
+      'statut' => $this->statut,
     ];
+  }
+
+  public function getStatut(): string
+  {
+    return $this->statut;
+  }
+  public function setStatut(string $statut): void
+  {
+    $this->statut = $statut;
   }
 }

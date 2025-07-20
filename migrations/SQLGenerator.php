@@ -6,7 +6,7 @@ class SQLGenerator
 {
   private static array $enumTypes = [];
 
-  public static function generateCreateTable(string $table, array $columns): string
+  public static function generateCreateTable(string $table, array $columns, string $driver = 'pgsql'): string
   {
     $lines = [];
     $foreignKeys = [];
@@ -17,8 +17,15 @@ class SQLGenerator
       // Type
       if (is_array($attributes['type']) && $attributes['type'][0] === 'ENUM') {
         $enumName = "{$table}_{$name}_enum";
-        self::$enumTypes[$enumName] = $attributes['type'][1];
-        $line .= $enumName;
+        if ($driver === 'mysql') {
+          // ENUM inline pour MySQL
+          $values = array_map(fn($v) => "'" . addslashes($v) . "'", $attributes['type'][1]);
+          $line .= 'ENUM(' . implode(', ', $values) . ')';
+        } else {
+          // ENUM global pour PostgreSQL
+          self::$enumTypes[$enumName] = $attributes['type'][1];
+          $line .= $enumName;
+        }
       } else {
         $line .= $attributes['type'];
       }
@@ -35,7 +42,11 @@ class SQLGenerator
 
       // AUTO INCREMENT
       if (!empty($attributes['auto_increment']) && stripos($attributes['type'], 'int') !== false) {
-        $line .= ' GENERATED ALWAYS AS IDENTITY';
+        if ($driver === 'mysql') {
+          $line .= ' AUTO_INCREMENT';
+        } else {
+          $line .= ' GENERATED ALWAYS AS IDENTITY';
+        }
       }
 
       // DEFAULT

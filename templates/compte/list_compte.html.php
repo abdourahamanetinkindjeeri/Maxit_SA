@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comptes - Maxit Sénégal</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Boxicons CDN -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -95,20 +97,14 @@
     <div class="flex items-center justify-between mb-8">
         <h1 class="text-2xl font-bold text-gray-800">Mon Compte</h1>
         <div class="flex space-x-2">
-            <button id="btnAddSecondary" class="bg-maxitOrange text-white px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight transition font-semibold">
-                + Ajouter un compte secondaire
+            <button id="btnAddSecondary" class="bg-maxitOrange text-white px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight transition font-semibold" title="Ajouter un compte secondaire">
+                <i class='bx bx-user-plus text-xl'></i>
             </button>
-            <a href="<?php echo BASE_URL; ?>compte/depot" class="bg-maxitOrange text-white px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight transition font-semibold flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Déposer
+            <a href="<?php echo BASE_URL; ?>compte/depot" class="bg-maxitOrange text-white px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight transition font-semibold flex items-center" title="Déposer">
+                <i class='bx bx-plus-circle text-xl'></i>
             </a>
-            <a href="#" id="btnChangeAccount" class="bg-white text-maxitOrange font-semibold px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight hover:text-white transition flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 17v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12v9m0 0l-3-3m3 3l3-3" />
-                </svg>
-                Changer de compte
+            <a href="#" id="btnChangeAccount" class="bg-white text-maxitOrange font-semibold px-5 py-2 rounded-lg shadow hover:bg-maxitOrangeLight hover:text-white transition flex items-center" title="Changer de compte">
+                <i class='bx bx-transfer text-xl'></i>
             </a>
         </div>
     </div>
@@ -363,6 +359,9 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                         <a href="#" class="text-indigo-600 hover:text-indigo-900">Détails</a>
+                                        <?php if (($transaction['typeTransaction']->value ?? '') === 'DEPOT' && ($transaction['statut'] ?? 'VALIDE') === 'VALIDE'): ?>
+                                            <a href="<?php echo BASE_URL; ?>compte/annuler-depot?id=<?php echo $transaction['id']; ?>" class="ml-2 text-red-600 hover:text-red-800" onclick="return confirm('Annuler ce dépôt ?');">Annuler</a>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

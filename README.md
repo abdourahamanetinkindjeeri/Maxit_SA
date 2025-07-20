@@ -45,11 +45,11 @@ MAXITSA est une application web permettant aux clients de gérer des comptes pri
 2. **Initialiser la base de données**
    - Lancer la migration pour créer les tables :
      ```bash
-     php migrations/migration.php
+     composer database:migrate
      ```
    - (Optionnel) Remplir la base avec des données de test :
      ```bash
-     php migrations/Seeder.php
+     composer database:seed
      ```
 
 ## Utilisation
@@ -74,7 +74,7 @@ MAXITSA est une application web permettant aux clients de gérer des comptes pri
 | GET     | /compte/solde              | Consultation du solde du compte courant |
 | POST    | /compte/ajouter-secondaire | Ajouter un compte secondaire            |
 | POST    | /compte/changer-compte     | Changer de compte courant               |
-| GET     | /compte/get-comptes-ajax   | Récupérer les comptes (AJAX)            |
+| GET     | /compte/get-comptes-ajax   | Récupérer les comptes                   |
 
 ## Auteurs
 

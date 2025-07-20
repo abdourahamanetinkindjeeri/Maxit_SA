@@ -38,6 +38,7 @@ $schemas = [
     'montant' => ['type' => 'NUMERIC(15,2)', 'not_null' => true],
     'type_transaction' => ['type' => ['ENUM', ['RETRAIT', 'DEPOT', 'PAIEMENT']], 'not_null' => true],
     'date' => ['type' => 'TIMESTAMP', 'default' => 'CURRENT_TIMESTAMP', 'not_null' => true],
+    'statut' => ['type' => 'VARCHAR(20)', 'default' => 'VALIDE', 'not_null' => true],
   ],
   'utilisateur' => [
     'id' => ['type' => 'INTEGER', 'primary' => true, 'auto_increment' => true],

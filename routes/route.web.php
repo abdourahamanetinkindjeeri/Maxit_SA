@@ -22,6 +22,7 @@ $routes = [
   '/compte/get-comptes-ajax' => ['controller' => CompteController::class, 'method' => 'getComptesAjax'],
   '/transactions' => ['controller' => CompteController::class, 'method' => 'transactions'],
   '/compte/depot' => ['controller' => CompteController::class, 'method' => 'depot'],
+  '/compte/annuler-depot' => ['controller' => CompteController::class, 'method' => 'annulerDepot'],
 
 ];
 
