@@ -9,7 +9,6 @@ require_once 'app/config/env.php';
 use PDO;
 use App\Migration\SQLGenerator;
 
-use function App\Config\dump_die;
 
 
 function prompt(string $label, bool $hidden = false): string
@@ -37,42 +36,7 @@ function prompt(string $label, bool $hidden = false): string
   return rtrim(fgets(STDIN), "\n");
 }
 
-// function askDatabaseCredentials(): array
-// {
-//   // Lire d'abord les variables d'environnement
-//   $env = [
-//     'DB_HOST' => getenv('DB_HOST') ?: '',
-//     'DB_PORT' => getenv('DB_PORT') ?: '',
-//     'DB_NAME' => getenv('DB_NAME') ?: '',
-//     'DB_USER' => getenv('DB_USER') ?: '',
-//     'DB_PASSWORD' => getenv('DB_PASSWORD') ?: '',
-//   ];
 
-//   $host = $env['DB_HOST'] ?: prompt("📝 Hôte de la base de données (localhost): ");
-//   $port = $env['DB_PORT'] ?: prompt("📝 Port (3306 pour MySQL, 5432 pour PostgreSQL): ");
-//   $dbName = $env['DB_NAME'] ?: prompt("📝 Nom de la base de données: ");
-//   $user = $env['DB_USER'] ?: prompt("👤 Utilisateur de la base: ");
-//   $pass = $env['DB_PASSWORD'];
-//   if ($pass === '') {
-//     // Si on est dans un terminal, prompt caché, sinon prompt normal
-//     $pass = prompt("🔑 Mot de passe: ", function_exists('posix_isatty') && posix_isatty(STDIN));
-//   }
-
-//   $driver = detectDriver($port);
-//   return [
-//     'DB_HOST' => $host ?? 'localhost',
-//     'DB_PORT' => $port ?: '3306',
-//     'DB_NAME' => $dbName,
-//     'DB_USER' => $user,
-//     'DB_PASSWORD' => $pass,
-//     'TOKEN' => TOKEN,
-//     'MESSAGING_SID' => MESSAGING_SID,
-//     'PHONE' => PHONE,
-//     'TWILIO_SID' => TWILIO_SID,
-//     'BASE_URL' => BASE_URL,
-//     'DSN' => "$driver:host=$host;port=$port;dbname=$dbName"
-//   ];
-// }
 
 function askDatabaseCredentials(): array
 {
@@ -84,13 +48,13 @@ function askDatabaseCredentials(): array
     'DB_PASSWORD' => getenv('DB_PASSWORD') ?: '',
   ];
 
-  $host = $env['DB_HOST'] ?: prompt("📝 Hôte de la base de données (localhost): ");
+  $host = $env['DB_HOST'] ?: prompt("Hôte de la base de données (localhost): ");
   $host = $host !== '' ? $host : 'localhost';
 
-  $port = $env['DB_PORT'] ?: prompt("📝 Port (3306 pour MySQL, 5432 pour PostgreSQL): ");
+  $port = $env['DB_PORT'] ?: prompt("Port (3306 pour MySQL, 5432 pour PostgreSQL): ");
   $port = $port !== '' ? $port : '5432';
 
-  $dbName = $env['DB_NAME'] ?: prompt("📝 Nom de la base de données: ");
+  $dbName = $env['DB_NAME'] ?: prompt("Nom de la base de données: ");
   $user = $env['DB_USER'] ?: prompt("👤 Utilisateur de la base: ");
   $pass = $env['DB_PASSWORD'];
   if ($pass === '') {
