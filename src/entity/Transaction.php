@@ -18,7 +18,7 @@ class Transaction extends AbstractEntity
     $this->id = $id;
     $this->montant = $montant;
     $this->date = new \DateTime($date);
-    $this->typeTransaction = TypeTransaction::from($type);
+    $this->typeTransaction = TypeTransaction::tryFrom($type) ?? TypeTransaction::DEPOT;
   }
 
   static public function toObject(array $row): static
@@ -27,7 +27,7 @@ class Transaction extends AbstractEntity
     $obj->id = $row['id'];
     $obj->montant = $row['montant'];
     $obj->date = new \DateTime($row['date']);
-    $obj->typeTransaction = TypeTransaction::from($row['type_transaction']);
+    $obj->typeTransaction = TypeTransaction::tryFrom($row['type_transaction']) ?? TypeTransaction::DEPOT;
     $obj->statut = $row['statut'] ?? 'VALIDE';
     return $obj;
   }
