@@ -41,4 +41,39 @@ class TransactionService
       'perPage' => $perPage
     ];
   }
+
+  public function faireDepot(int $userId, int $compteCourantId, int $compteCibleId, float $montant): array
+  {
+    $compteRepo = \App\Repository\CompteRepository::getInstance();
+    $transactionRepo = \App\Repository\TransactionRepository::getInstance();
+    $comptes = $compteRepo->getComptesByUserId($userId);
+    $ids = array_map(fn($c) => $c->getId(), $comptes);
+    if (!in_array($compteCourantId, $ids) || !in_array($compteCibleId, $ids)) {
+      return ['success' => false, 'message' => "Comptes invalides"];
+    }
+    if ($compteCourantId == $compteCibleId) {
+      return ['success' => false, 'message' => "Vous ne pouvez pas déposer sur le même compte."];
+    }
+    $source = null;
+    $cible = null;
+    foreach ($comptes as $c) {
+      if ($c->getId() == $compteCourantId) $source = $c;
+      if ($c->getId() == $compteCibleId) $cible = $c;
+    }
+    if (!$source || $source->getMontant() < $montant) {
+      return ['success' => false, 'message' => "Solde insuffisant sur le compte courant."];
+    }
+    $db = $compteRepo->getDb();
+    try {
+      $db->beginTransaction();
+      $compteRepo->updateSoldeCompte($compteCourantId, $source->getMontant() - $montant);
+      $compteRepo->updateSoldeCompte($compteCibleId, $cible->getMontant() + $montant);
+      $transactionRepo->createDepot($userId, $compteCibleId, $montant);
+      $db->commit();
+      return ['success' => true, 'message' => "Dépôt effectué avec succès."];
+    } catch (\Exception $e) {
+      $db->rollBack();
+      return ['success' => false, 'message' => "Erreur lors du dépôt : " . $e->getMessage()];
+    }
+  }
 }

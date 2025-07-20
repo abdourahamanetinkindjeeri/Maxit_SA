@@ -26,6 +26,11 @@ abstract class AbstractRepository
     return (int) $stmt->fetchColumn() ?? 0;
   }
 
+  public function getDb(): \PDO
+  {
+    return $this->db;
+  }
+
   public function __construct()
   {
     $this->db = App::get('App\\Core\\Database')->getConnection();

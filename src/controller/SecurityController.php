@@ -111,7 +111,6 @@ class SecurityController extends AbstractController
       // dump_die($transactionService->getLastTenTransaction($user));
       $this->handleSuccessfulLogin($user);
       //      header('Location:' . BASE_URL . 'compte');
-      $this->login();
       exit();
     } else {
       // Échec de connexion - utiliser les validators pour l'erreur

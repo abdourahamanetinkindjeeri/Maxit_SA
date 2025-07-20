@@ -212,16 +212,16 @@ class CompteRepository extends AbstractRepository
   /**
    * Met à jour le solde du compte principal d'un utilisateur
    */
-  public function updateSoldeComptePrincipal(int $userId, float $nouveauSolde): bool
+  public function updateSoldeCompte(int $compteId, float $nouveauSolde): bool
   {
     try {
-      $sql = "UPDATE {$this->table} SET montant = :montant WHERE client_id = :user_id";
+      $sql = "UPDATE {$this->table} SET montant = :montant WHERE id = :id";
       $stmt = $this->db->prepare($sql);
       $stmt->bindValue(':montant', $nouveauSolde);
-      $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+      $stmt->bindValue(':id', $compteId, \PDO::PARAM_INT);
       return $stmt->execute();
     } catch (\PDOException $e) {
-      error_log("Erreur mise à jour solde compte principal: " . $e->getMessage());
+      error_log("Erreur mise à jour solde compte: " . $e->getMessage());
       return false;
     }
   }

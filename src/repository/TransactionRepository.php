@@ -98,4 +98,16 @@ class TransactionRepository extends AbstractRepository
   {
     // TODO: Implement selectById() method.
   }
+
+  public function createDepot(int $utilisateurId, int $compteId, float $montant): bool
+  {
+    $sql = "INSERT INTO transaction (utilisateur_id, compte_id, montant, type_transaction, date)
+                VALUES (:utilisateur_id, :compte_id, :montant, 'DEPOT', NOW())";
+    $stmt = $this->db->prepare($sql);
+    return $stmt->execute([
+      'utilisateur_id' => $utilisateurId,
+      'compte_id' => $compteId,
+      'montant' => $montant
+    ]);
+  }
 }

@@ -239,6 +239,35 @@ class CompteController extends AbstractController
     ]);
   }
 
+  public function depot(): void
+  {
+    $user = $this->session->get('user');
+    if (!$user) {
+      header('Location:' . BASE_URL . 'login');
+      exit();
+    }
+    $compteService = \App\Service\CompteService::getInstance();
+    $comptes = $compteService->getComptesClientAvecUtilisateur($user['id']);
+    $compteCourantId = $this->session->get('compte_courant_id');
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+      $cibleId = (int)$_POST['cible_compte_id'];
+      $montant = (float)$_POST['montant'];
+      $transactionService = \App\Service\TransactionService::getInstance();
+      $result = $transactionService->faireDepot($user['id'], $compteCourantId, $cibleId, $montant);
+      if ($result['success']) {
+        $this->session->set('depot_success', $result['message']);
+      } else {
+        $this->session->set('depot_error', $result['message']);
+      }
+      header('Location:' . BASE_URL . 'compte');
+      exit();
+    }
+
+    // Afficher le formulaire
+    parent::renderHTML('compte/depot.html.php', ['comptes' => $comptes, 'compte_courant_id' => $compteCourantId]);
+  }
+
 
   /**
    * Affiche le solde d'un utilisateur spécifique
