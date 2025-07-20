@@ -110,7 +110,8 @@ class SecurityController extends AbstractController
       //fin simulation
       // dump_die($transactionService->getLastTenTransaction($user));
       $this->handleSuccessfulLogin($user);
-      header('Location:' . BASE_URL . 'compte');
+      //      header('Location:' . BASE_URL . 'compte');
+      $this->login();
       exit();
     } else {
       // Échec de connexion - utiliser les validators pour l'erreur
@@ -218,6 +219,8 @@ class SecurityController extends AbstractController
         $this->session->set('warning_message', 'Compte créé avec succès, mais l\'envoi du SMS a échoué.');
       }
 
+      // Connecter automatiquement l'utilisateur et rediriger
+      $this->handleSuccessfulLogin($user);
       header('Location:' . BASE_URL . 'compte');
       exit();
     } else {
