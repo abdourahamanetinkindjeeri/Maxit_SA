@@ -218,6 +218,26 @@ class CompteController extends AbstractController
     exit();
   }
 
+  public function transactions(): void
+  {
+    $user = $this->session->get('user');
+    if (!$user) {
+      header('Location:' . BASE_URL . 'login');
+      exit();
+    }
+    $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+    $perPage = 10;
+    $transactionService = \App\Service\TransactionService::getInstance();
+    $pagination = $transactionService->getAllTransactionsPaginated($page, $perPage);
+    $transactions = array_map(fn($t) => $t->toArray(), $pagination['transactions']);
+    $total = $pagination['total'];
+    $nbPages = (int)ceil($total / $perPage);
+    parent::renderHTML('compte/transactions.html.php', [
+      'transactions' => $transactions,
+      'page' => $page,
+      'nbPages' => $nbPages
+    ]);
+  }
 
 
   /**

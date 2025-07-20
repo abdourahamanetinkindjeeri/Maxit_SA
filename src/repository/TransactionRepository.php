@@ -31,14 +31,11 @@ class TransactionRepository extends AbstractRepository
   {
     $request = "
         SELECT transaction.*
-        FROM utilisateur
-        JOIN compte ON compte.client_id = utilisateur.id
-        JOIN transaction ON transaction.compte_id = compte.id
-        WHERE utilisateur.id = :utilisateur_id
+        FROM transaction
+        WHERE transaction.utilisateur_id = :utilisateur_id
         ORDER BY transaction.date DESC
         LIMIT 10 
     ";
-    // ORDER BY transaction.date DESC
 
     $stmt = $this->db->prepare($request);
     $stmt->execute([
@@ -54,6 +51,26 @@ class TransactionRepository extends AbstractRepository
     return $transactions;
   }
 
+  public function getTransactionsPaginated(int $offset, int $limit): array
+  {
+    $request = "SELECT * FROM transaction ORDER BY date DESC LIMIT :limit OFFSET :offset";
+    $stmt = $this->db->prepare($request);
+    $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+    $stmt->execute();
+    $transactions = [];
+    while ($data = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+      $transactions[] = Transaction::toObject($data);
+    }
+    return $transactions;
+  }
+
+  public function countAllTransactions(): int
+  {
+    $stmt = $this->db->query("SELECT COUNT(*) as count FROM transaction");
+    $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+    return (int)($result['count'] ?? 0);
+  }
 
   public function selectAll()
   {

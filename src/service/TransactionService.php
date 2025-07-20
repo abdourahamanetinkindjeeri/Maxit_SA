@@ -27,4 +27,18 @@ class TransactionService
 
     return $repo->getLastTenTransactions($utilisateur);
   }
+
+  public function getAllTransactionsPaginated(int $page = 1, int $perPage = 10): array
+  {
+    $repo = App::get('App\\Repository\\TransactionRepository');
+    $offset = ($page - 1) * $perPage;
+    $transactions = $repo->getTransactionsPaginated($offset, $perPage);
+    $total = $repo->countAllTransactions();
+    return [
+      'transactions' => $transactions,
+      'total' => $total,
+      'page' => $page,
+      'perPage' => $perPage
+    ];
+  }
 }

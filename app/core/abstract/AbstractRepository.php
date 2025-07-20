@@ -18,18 +18,11 @@ abstract class AbstractRepository
 
   public function countRow(string $colonne, mixed $value, $table): int
   {
-    if ($colonne === 'telephones') {
-      $sql = "SELECT COUNT(*) FROM {$table} WHERE :value = ANY({$colonne})";
-    } elseif ($colonne === 'login') {
-      $sql = "SELECT COUNT(*) FROM {$table} WHERE {$colonne} = :value";
-    } else {
-      $sql = "SELECT COUNT(*) FROM {$table} WHERE {$colonne} = :value";
-    }
-
+    // Correction : on utilise une égalité simple pour le téléphone
+    $sql = "SELECT COUNT(*) FROM {$table} WHERE {$colonne} = :value";
     $stmt = $this->db->prepare($sql);
     $stmt->bindValue(':value', $value);
     $stmt->execute();
-
     return (int) $stmt->fetchColumn() ?? 0;
   }
 

@@ -8,7 +8,6 @@ use App\Entity\Compte;
 use App\Entity\Utilisateur;
 use \PDO;
 
-use function App\Config\dump_die;
 
 class CompteRepository extends AbstractRepository
 {

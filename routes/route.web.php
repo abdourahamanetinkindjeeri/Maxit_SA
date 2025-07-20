@@ -20,6 +20,7 @@ $routes = [
   '/compte/ajouter-secondaire' => ['controller' => CompteController::class, 'method' => 'ajouterSecondaire'],
   '/compte/changer-compte' => ['controller' => CompteController::class, 'method' => 'changerCompte'],
   '/compte/get-comptes-ajax' => ['controller' => CompteController::class, 'method' => 'getComptesAjax'],
+  '/transactions' => ['controller' => CompteController::class, 'method' => 'transactions'],
 
 ];
 

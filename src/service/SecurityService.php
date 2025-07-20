@@ -62,7 +62,7 @@ class SecurityService
   {
     $repoUtilisateur = App::get('App\\Repository\\UtilisateurRepository');
     $repoCompte = App::get('App\\Repository\\CompteRepository');
-    $pdo = App::get('App\\Core\\Database');
+    $pdo = App::get('App\\Core\\Database')->getConnection();
 
     try {
       $pdo->beginTransaction();
@@ -108,7 +108,7 @@ class SecurityService
   public function isPhoneNumberUsed($telephone)
   {
     $repo = App::get('App\\Repository\\UtilisateurRepository');
-    return Validator::isUniqueRow($repo->countRow('telephones', $telephone, 'compte'));
+    return Validator::isUniqueRow($repo->countRow('telephone', $telephone, 'compte'));
   }
 
   public function isLoginUsed($login)

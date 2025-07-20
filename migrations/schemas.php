@@ -21,18 +21,18 @@
 
 $schemas = [
   'compte' => [
-    'id' => ['type' => 'INTEGER', 'not_null' => true],
+    'id' => ['type' => 'INTEGER', 'primary' => true, 'auto_increment' => true],
     'client_id' => ['type' => 'INTEGER', 'not_null' => true],
     'montant' => ['type' => 'NUMERIC(15,2)', 'not_null' => true],
     'telephone' => ['type' => 'VARCHAR(14)'],
     'type_compte' => ['type' => ['ENUM', ['Principal', 'Secondaire']]],
   ],
   'profile' => [
-    'id' => ['type' => 'INTEGER', 'not_null' => true],
+    'id' => ['type' => 'INTEGER', 'primary' => true, 'auto_increment' => true],
     'libelle' => ['type' => 'VARCHAR(100)', 'not_null' => true, 'unique' => true],
   ],
   'transaction' => [
-    'id' => ['type' => 'INTEGER', 'not_null' => true],
+    'id' => ['type' => 'INTEGER', 'primary' => true, 'auto_increment' => true],
     'utilisateur_id' => ['type' => 'INTEGER'],
     'compte_id' => ['type' => 'INTEGER', 'not_null' => true],
     'montant' => ['type' => 'NUMERIC(15,2)', 'not_null' => true],
@@ -40,12 +40,12 @@ $schemas = [
     'date' => ['type' => 'TIMESTAMP', 'default' => 'CURRENT_TIMESTAMP', 'not_null' => true],
   ],
   'utilisateur' => [
-    'id' => ['type' => 'INTEGER', 'not_null' => true],
+    'id' => ['type' => 'INTEGER', 'primary' => true, 'auto_increment' => true],
     'nom' => ['type' => 'VARCHAR(100)', 'not_null' => true],
     'prenom' => ['type' => 'VARCHAR(100)', 'not_null' => true],
     'login' => ['type' => 'VARCHAR(100)', 'not_null' => true, 'unique' => true],
     'password' => ['type' => 'VARCHAR(255)', 'not_null' => true],
-    'cni' => ['type' => 'VARCHAR(13)', 'not_null' => true, 'unique' => true],
+    'cni' => ['type' => 'VARCHAR(20)', 'not_null' => true, 'unique' => true],
     'cni_recto' => ['type' => 'VARCHAR(255)', 'not_null' => true, 'unique' => true],
     'cni_verso' => ['type' => 'VARCHAR(255)', 'not_null' => true, 'unique' => true],
     'profile_id' => ['type' => 'INTEGER'],
