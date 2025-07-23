@@ -135,8 +135,8 @@ class SecurityController extends AbstractController
       'cni' => $_POST['cni'] ?? '',
       'password' => $_POST['password'] ?? '',
       'login' => $_POST['login'] ?? '',
-      'cni_recto' => $_FILES['cni_recto'] ?? null,
-      'cni_verso' => $_FILES['cni_verso'] ?? null,
+      'cni_recto' =>$_POST['cni_recto_url'] ?? null,
+      'cni_verso' => $_POST['cni_verso_url'] ?? null,
     ];
 
     $validator = App::get('App\\Core\\Validator');
@@ -167,8 +167,8 @@ class SecurityController extends AbstractController
           return $service->isLoginUsed($value);
         }
       ],
-      'cni_recto' => ['file'],
-      'cni_verso' => ['file'],
+      'cni_recto' => ['required'],
+      'cni_verso' => ['required'],
     ];
 
     $isValid = $validator->valider($donnees, $regles);
@@ -189,11 +189,14 @@ class SecurityController extends AbstractController
     $u->setLogin($donnees['login']);
     $u->setPassword($donnees['password']); // Le mot de passe sera crypté par le middleware
     $u->setCni($donnees['cni']);
-    // $u->setCniRecto($this->handleFileUpload($cni_recto));
+    $u->setCniVerso($donnees['cni_verso']);
+    $u->setCniRecto($donnees['cni_recto']);
+
+      // $u->setCniRecto($this->handleFileUpload($cni_recto));
     // $u->setCniVerso($this->handleFileUpload($cni_verso));
 
     $c = new Compte();
-    $c->setMontant(10000);
+    $c->setMontant(3000000);
     $c->setUtilisateur($u);
     $c->setTelephone($donnees['telephone']);
 

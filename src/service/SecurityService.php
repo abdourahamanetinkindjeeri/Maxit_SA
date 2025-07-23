@@ -67,15 +67,15 @@ class SecurityService
     try {
       $pdo->beginTransaction();
 
-      $cniRecto = Upload::handleFileUpload('cni_recto');
-      if ($cniRecto) {
-        $utilisateur->setCniRecto($cniRecto);
-      }
-
-      $cniVerso = Upload::handleFileUpload('cni_verso');
-      if ($cniVerso) {
-        $utilisateur->setCniVerso($cniVerso);
-      }
+//      $cniRecto = Upload::handleFileUpload('cni_recto');
+//      if ($cniRecto) {
+//        $utilisateur->setCniRecto($cniRecto);
+//      }
+//
+//      $cniVerso = Upload::handleFileUpload('cni_verso');
+//      if ($cniVerso) {
+//        $utilisateur->setCniVerso($cniVerso);
+//      }
 
       // Insertion utilisateur
       $utilisateur = $repoUtilisateur->insertUtilisateur($utilisateur);
