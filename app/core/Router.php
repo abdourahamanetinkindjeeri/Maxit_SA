@@ -53,17 +53,3 @@ class Router
 }
 
 
-// namespace App\Core;
-
-// class Router
-// {
-//     public function __construct()
-//     {
-//         echo "Router instancié avec succès!<br>";
-//     }
-
-//     public function route()
-//     {
-//         return "Routing...";
-//     }
-// }
