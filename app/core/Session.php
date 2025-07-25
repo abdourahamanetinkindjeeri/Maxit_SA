@@ -29,12 +29,14 @@ class Session
     }
   }
 
-  private function __construct()
-  {
-    $this->startSession();
+private function startSession(): void
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        ob_start(); // 🔁 Optionnel mais utile en Docker
+        session_start();
+    }
+}
 
-    $this->session = &$_SESSION;
-  }
 
   /**
    * Définit une valeur dans la session
