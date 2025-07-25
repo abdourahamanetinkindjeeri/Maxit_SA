@@ -1,3 +1,7 @@
+<?php
+$filter_date = $_GET['filter_date'] ?? '';
+$filter_type = $_GET['filter_type'] ?? '';
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
