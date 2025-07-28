@@ -555,6 +555,12 @@
             setTimeout(() => {
                 printWindow.print();
                 printWindow.close();
+                
+                // Fermer le popup de reçu et rediriger vers la page d'accueil
+                setTimeout(() => {
+                    closeRecu();
+                    window.location.href = "<?= BASE_URL ?>compte";
+                }, 1000);
             }, 500);
         }
 
