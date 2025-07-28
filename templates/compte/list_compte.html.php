@@ -116,6 +116,15 @@ $filter_type = $_GET['filter_type'] ?? '';
             </a>
         </div>
     </div>
+
+    <!-- Bouton d'accès rapide Woyofal -->
+    <div class="mb-6">
+        <a href="<?php echo BASE_URL; ?>achat" 
+           class="inline-flex items-center px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold text-lg rounded-xl shadow-lg hover:from-orange-600 hover:to-red-600 transform hover:scale-105 transition-all duration-300">
+            <i class='bx bx-credit-card text-2xl mr-3'></i>
+            Payer ma facture Woyofal
+        </a>
+    </div>
     <?php if (!empty($_SESSION['add_secondary_errors'])): ?>
         <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             <?php foreach ($_SESSION['add_secondary_errors'] as $err): ?>

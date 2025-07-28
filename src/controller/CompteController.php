@@ -312,9 +312,13 @@ class CompteController extends AbstractController
       return;
     }
 
+    // Lire les données JSON du body de la requête
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+
     // Récupérer les données du formulaire
-    $compteur = $_POST['compteur'] ?? '';
-    $montant = (float)($_POST['montant'] ?? 0);
+    $compteur = $data['compteur'] ?? '';
+    $montant = (float)($data['montant'] ?? 0);
 
     // Validation des données
     if (empty($compteur) || $montant <= 0) {
@@ -326,7 +330,7 @@ class CompteController extends AbstractController
     try {
       // Appel à l'API Woyofal
       $apiUrl = 'https://woyofall-sn-1.onrender.com/api/achat';
-      $data = [
+      $apiData = [
         'compteur' => $compteur,
         'montant' => $montant
       ];
@@ -334,20 +338,26 @@ class CompteController extends AbstractController
       $ch = curl_init();
       curl_setopt($ch, CURLOPT_URL, $apiUrl);
       curl_setopt($ch, CURLOPT_POST, true);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+      curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($apiData));
       curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json',
         'Accept: application/json'
       ]);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
       curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Pour éviter les problèmes SSL en développement
 
       $response = curl_exec($ch);
       $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+      if (curl_errno($ch)) {
+        throw new \Exception('Erreur cURL: ' . curl_error($ch));
+      }
+
       curl_close($ch);
 
       if ($httpCode !== 200) {
-        throw new \Exception('Erreur de communication avec l\'API Woyofal');
+        throw new \Exception('Erreur de communication avec l\'API Woyofal (HTTP ' . $httpCode . ')');
       }
 
       $result = json_decode($response, true);
@@ -363,6 +373,7 @@ class CompteController extends AbstractController
       header('Content-Type: application/json');
       echo json_encode($result);
     } catch (\Exception $e) {
+      error_log('Erreur Woyofal API: ' . $e->getMessage());
       http_response_code(500);
       echo json_encode([
         'error' => $e->getMessage(),
