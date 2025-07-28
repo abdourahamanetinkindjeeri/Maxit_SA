@@ -246,7 +246,7 @@
                     <h3 id="alert-title" class="text-lg font-semibold"></h3>
                 </div>
                 <p id="alert-message" class="text-gray-600 mb-6"></p>
-                <div class="flex justify-end">
+                <div id="alert-actions" class="flex justify-end">
                     <button onclick="closeAlert()" 
                             class="px-6 py-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors">
                         OK
@@ -260,12 +260,13 @@
         // Configuration avec URL PHP
         const API_BASE_URL = "<?= BASE_URL ?>";
 
-        function showAlert(message, type = "info", title = "") {
+        function showAlert(message, type = "info", title = "", showRechargeButton = false) {
             const popup = document.getElementById("alert-popup");
             const overlay = document.getElementById("overlay");
             const alertIcon = document.getElementById("alert-icon");
             const alertTitle = document.getElementById("alert-title");
             const alertMessage = document.getElementById("alert-message");
+            const alertActions = document.getElementById("alert-actions");
 
             // Configuration des icônes et couleurs selon le type
             switch (type) {
@@ -303,7 +304,35 @@
             }
 
             alertMessage.textContent = message;
+
+            // Gérer les boutons d'action
+            if (showRechargeButton) {
+                alertActions.innerHTML = `
+                    <button onclick="rechargerCompte()" 
+                            class="px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors mr-2">
+                        <i class="fas fa-credit-card mr-2"></i>Recharger via OM
+                    </button>
+                    <button onclick="closeAlert()" 
+                            class="px-4 py-2 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors">
+                        Annuler
+                    </button>
+                `;
+            } else {
+                alertActions.innerHTML = `
+                    <button onclick="closeAlert()" 
+                            class="px-6 py-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors">
+                        OK
+                    </button>
+                `;
+            }
+
             showPopup(popup, overlay);
+        }
+
+        function rechargerCompte() {
+            closeAlert();
+            // Rediriger vers la page de recharge ou ouvrir un popup de recharge
+            window.location.href = "<?= BASE_URL ?>compte/depot";
         }
 
         function closeAlert() {
@@ -618,6 +647,14 @@
                     setTimeout(() => {
                         showRecu();
                     }, 300);
+                } else if (result.statut === "insufficient_balance") {
+                    // Afficher le message de solde insuffisant avec option de recharge
+                    showAlert(
+                        `Solde insuffisant. Votre solde actuel: ${result.solde_actuel} FCFA. Montant demandé: ${result.montant_demande} FCFA. Montant manquant: ${result.montant_manquant} FCFA. ${result.message}`,
+                        "warning",
+                        "Solde insuffisant",
+                        true // Afficher le bouton de recharge
+                    );
                 } else {
                     showAlert(
                         result.error || result.message || "Erreur lors de l'achat",

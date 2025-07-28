@@ -328,6 +328,43 @@ class CompteController extends AbstractController
     }
 
     try {
+      // Vérifier le solde du compte avant le paiement
+      $user = $this->session->get('user');
+      $compteService = App::get('App\\Service\\CompteService');
+      $comptes = $compteService->getComptesClientAvecUtilisateur($user['id']);
+
+      if (empty($comptes)) {
+        throw new \Exception('Aucun compte trouvé pour cet utilisateur');
+      }
+
+      $compteCourant = null;
+      foreach ($comptes as $c) {
+        if ($c->getId() == $this->session->get('compte_courant_id')) {
+          $compteCourant = $c;
+          break;
+        }
+      }
+      if (!$compteCourant && count($comptes) > 0) {
+        $compteCourant = $comptes[0];
+      }
+
+      $soldeActuel = $compteCourant ? $compteCourant->getMontant() : 0;
+
+      // Vérifier si le solde est suffisant
+      if ($soldeActuel < $montant) {
+        $montantManquant = $montant - $soldeActuel;
+        http_response_code(402); // Payment Required
+        echo json_encode([
+          'error' => 'Solde insuffisant',
+          'statut' => 'insufficient_balance',
+          'solde_actuel' => $soldeActuel,
+          'montant_demande' => $montant,
+          'montant_manquant' => $montantManquant,
+          'message' => 'Votre solde est insuffisant pour effectuer ce paiement. Veuillez recharger votre compte via Orange Money.'
+        ]);
+        return;
+      }
+
       // Appel à l'API Woyofal - Utiliser GET pour récupérer les données
       $apiUrl = 'https://woyofall-sn-1.onrender.com/api/achat';
 
@@ -364,6 +401,9 @@ class CompteController extends AbstractController
       // Simuler un paiement en trouvant une transaction correspondante
       $transactionSimulee = $this->simulerPaiementWoyofal($compteur, $montant, $result['data']);
 
+      // Déduire le montant du compte
+      $this->deduireMontantCompte($compteCourant->getId(), $montant);
+
       // Enregistrer la transaction dans notre base de données
       $this->enregistrerTransactionWoyofal($transactionSimulee);
 
@@ -371,7 +411,8 @@ class CompteController extends AbstractController
       header('Content-Type: application/json');
       echo json_encode([
         'statut' => 'success',
-        'data' => $transactionSimulee
+        'data' => $transactionSimulee,
+        'nouveau_solde' => $soldeActuel - $montant
       ]);
     } catch (\Exception $e) {
       error_log('Erreur Woyofal API: ' . $e->getMessage());
@@ -481,5 +522,22 @@ class CompteController extends AbstractController
         'civilite' => 'M'
       ]
     ];
+  }
+
+  private function deduireMontantCompte(int $compteId, float $montant): void
+  {
+    try {
+      $pdo = App::get('App\\Core\\Database')->getConnection();
+      $sql = "UPDATE compte SET montant = montant - ? WHERE id = ?";
+      $stmt = $pdo->prepare($sql);
+      $stmt->execute([$montant, $compteId]);
+
+      if ($stmt->rowCount() === 0) {
+        throw new \Exception('Erreur lors de la mise à jour du solde');
+      }
+    } catch (\Exception $e) {
+      error_log('Erreur lors de la déduction du montant: ' . $e->getMessage());
+      throw $e;
+    }
   }
 }
