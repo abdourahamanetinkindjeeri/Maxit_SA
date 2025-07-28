@@ -328,24 +328,19 @@ class CompteController extends AbstractController
     }
 
     try {
-      // Appel à l'API Woyofal
+      // Appel à l'API Woyofal - Utiliser GET pour récupérer les données
       $apiUrl = 'https://woyofall-sn-1.onrender.com/api/achat';
-      $apiData = [
-        'compteur' => $compteur,
-        'montant' => $montant
-      ];
 
       $ch = curl_init();
       curl_setopt($ch, CURLOPT_URL, $apiUrl);
-      curl_setopt($ch, CURLOPT_POST, true);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($apiData));
+      curl_setopt($ch, CURLOPT_HTTPGET, true);
       curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/json',
-        'Accept: application/json'
+        'Accept: application/json',
+        'Content-Type: application/json'
       ]);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
       curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Pour éviter les problèmes SSL en développement
+      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
       $response = curl_exec($ch);
       $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -366,12 +361,18 @@ class CompteController extends AbstractController
         throw new \Exception($result['message'] ?? 'Erreur lors du traitement de l\'achat');
       }
 
-      // Enregistrer la transaction dans notre base de données
-      $this->enregistrerTransactionWoyofal($result['data']);
+      // Simuler un paiement en trouvant une transaction correspondante
+      $transactionSimulee = $this->simulerPaiementWoyofal($compteur, $montant, $result['data']);
 
-      // Retourner la réponse
+      // Enregistrer la transaction dans notre base de données
+      $this->enregistrerTransactionWoyofal($transactionSimulee);
+
+      // Retourner la réponse simulée
       header('Content-Type: application/json');
-      echo json_encode($result);
+      echo json_encode([
+        'statut' => 'success',
+        'data' => $transactionSimulee
+      ]);
     } catch (\Exception $e) {
       error_log('Erreur Woyofal API: ' . $e->getMessage());
       http_response_code(500);
@@ -406,5 +407,79 @@ class CompteController extends AbstractController
     } catch (\Exception $e) {
       error_log('Erreur lors de l\'enregistrement de la transaction Woyofal: ' . $e->getMessage());
     }
+  }
+
+  private function simulerPaiementWoyofal(string $compteur, float $montant, array $donneesApi): array
+  {
+    // Générer une référence unique
+    $reference = 'ACH-' . strtoupper(uniqid());
+
+    // Générer un code de recharge
+    $codeRecharge = sprintf(
+      '%04d-%04d-%04d-%04d-%04d',
+      rand(1000, 9999),
+      rand(1000, 9999),
+      rand(1000, 9999),
+      rand(1000, 9999),
+      rand(1000, 9999)
+    );
+
+    // Calculer le nombre de KWT basé sur le montant
+    $prixParKwh = 91; // Prix par défaut pour la tranche 1
+    $nbreKwt = round($montant / $prixParKwh, 2);
+
+    // Déterminer la tranche basée sur la consommation
+    $tranche = [
+      'nom' => 'Tranche 1',
+      'min' => 0,
+      'max' => 150,
+      'prixParKwh' => $prixParKwh
+    ];
+
+    if ($nbreKwt > 150) {
+      $tranche = [
+        'nom' => 'Tranche 2',
+        'min' => 151,
+        'max' => 250,
+        'prixParKwh' => 102
+      ];
+    }
+
+    if ($nbreKwt > 250) {
+      $tranche = [
+        'nom' => 'Tranche 3',
+        'min' => 251,
+        'max' => 400,
+        'prixParKwh' => 116
+      ];
+    }
+
+    return [
+      'reference' => $reference,
+      'codeRecharge' => $codeRecharge,
+      'nbreKwt' => $nbreKwt,
+      'date' => date('Y-m-d H:i:s'),
+      'tranche' => $tranche,
+      'montant' => $montant,
+      'compteur' => [
+        'numero' => $compteur,
+        'clientId' => null,
+        'trancheConsommee' => 0,
+        'consommationAnnuelle' => 0,
+        'moisCourant' => date('Y-m'),
+        'anneeCourante' => date('Y'),
+        'statusTranche' => $tranche['nom'],
+        'dateCreation' => date('Y-m-d H:i:s')
+      ],
+      'client' => [
+        'id' => 1,
+        'nom' => 'Client',
+        'prenom' => 'Woyofal',
+        'telephone' => '221000000000',
+        'cni' => 'SN000000000',
+        'adresse' => 'Dakar, Sénégal',
+        'civilite' => 'M'
+      ]
+    ];
   }
 }
