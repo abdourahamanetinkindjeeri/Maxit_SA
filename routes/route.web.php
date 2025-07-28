@@ -24,6 +24,10 @@ $routes = [
   '/compte/depot' => ['controller' => CompteController::class, 'method' => 'depot'],
   '/compte/annuler-depot' => ['controller' => CompteController::class, 'method' => 'annulerDepot'],
 
+  // Routes pour le paiement Woyofal
+  '/achat' => ['controller' => CompteController::class, 'method' => 'showAchat'],
+  '/achat/process' => ['controller' => CompteController::class, 'method' => 'processAchat'],
+
 ];
 
 return $routes;

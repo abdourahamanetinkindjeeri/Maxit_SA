@@ -139,37 +139,45 @@ class SecurityController extends AbstractController
       'cni_verso' => $_POST['cni_verso_url'] ?? null,
     ];
 
-    // Validation rapide des champs requis
-    if (
-      empty($donnees['nom']) || empty($donnees['prenom']) || empty($donnees['telephone']) ||
-      empty($donnees['cni']) || empty($donnees['password']) || empty($donnees['login']) ||
-      empty($donnees['cni_recto']) || empty($donnees['cni_verso'])
-    ) {
-      $this->session->set('errors', ['form' => ['Tous les champs sont obligatoires']]);
-      $this->session->set('old_input', $donnees);
-      parent::renderHTML('utilisateur/inscription.html.php');
-      return;
-    }
-
     $validator = App::get('App\\Core\\Validator');
 
-    // Validation asynchrone des règles complexes
-    $validationResults = [
-      'telephone' => $service->isPhoneNumberUsed($donnees['telephone']),
-      'cni' => $service->isCNIUsed($donnees['cni']),
-      'login' => $service->isLoginUsed($donnees['login'])
+    // Définition des règles de validation
+    $regles = [
+      'nom' => ['required'],
+      'prenom' => ['required'],
+      'telephone' => [
+        'required',
+        'phone',
+        'unique' => function ($value) use ($service) {
+          return $service->isPhoneNumberUsed($value);
+        }
+      ],
+      'cni' => [
+        'required',
+        'cni',
+        'unique' => function ($value) use ($service) {
+          return $service->isCNIUsed($value);
+        }
+      ],
+      'password' => ['required'],
+      'login' => [
+        'required',
+        'email',
+        'unique' => function ($value) use ($service) {
+          return $service->isLoginUsed($value);
+        }
+      ],
+      'cni_recto' => ['required'],
+      'cni_verso' => ['required'],
     ];
 
-    // Vérification des résultats de validation
-    $errors = [];
-    if (!$validationResults['telephone']) $errors['telephone'] = ['Ce numéro de téléphone est déjà utilisé'];
-    if (!$validationResults['cni']) $errors['cni'] = ['Ce numéro de CNI est déjà utilisé'];
-    if (!$validationResults['login']) $errors['login'] = ['Cet email est déjà utilisé'];
-    if (!filter_var($donnees['login'], FILTER_VALIDATE_EMAIL)) $errors['login'] = ['Email invalide'];
+    $isValid = $validator->valider($donnees, $regles);
 
-    if (!empty($errors)) {
-      $this->session->set('errors', $errors);
-      $this->session->set('old_input', $donnees);
+    // Stockage des données dans la session
+    $this->session->set('old_input', $donnees);
+
+    if (!$isValid) {
+      $this->session->set('errors', $validator->getErrors());
       parent::renderHTML('utilisateur/inscription.html.php');
       return;
     }
@@ -179,10 +187,13 @@ class SecurityController extends AbstractController
     $u->setNom($donnees['nom']);
     $u->setPrenom($donnees['prenom']);
     $u->setLogin($donnees['login']);
-    $u->setPassword($donnees['password']);
+    $u->setPassword($donnees['password']); // Le mot de passe sera crypté par le middleware
     $u->setCni($donnees['cni']);
     $u->setCniVerso($donnees['cni_verso']);
     $u->setCniRecto($donnees['cni_recto']);
+
+    // $u->setCniRecto($this->handleFileUpload($cni_recto));
+    // $u->setCniVerso($this->handleFileUpload($cni_verso));
 
     $c = new Compte();
     $c->setMontant(3000000);
@@ -191,18 +202,36 @@ class SecurityController extends AbstractController
 
     $user = $service->inscrire($u, $c);
 
-    if ($user) {
-      // Nettoyer la session et connecter l'utilisateur
-      $this->session->unset('errors');
-      $this->session->unset('old_input');
-      $this->session->set('user', $user->toArray());
-      $this->session->set('success_message', 'Compte créé avec succès ! Un SMS de confirmation vous sera envoyé.');
 
-      // Redirection immédiate
+    if ($user) {
+      // Envoi du SMS de bienvenue avec gestion d'erreur
+      $smsSent = false;
+      $smsError = null;
+
+      try {
+        $messagerie = new \App\Core\Messagerie();
+        $message = 'Bonjour ' . $donnees['prenom'] . '! Bienvenue sur Maxitsa. Votre compte a été créé avec succès. Solde initial: ' . $c->getMontant() . ' FCFA.';
+        $messagerie->sendMessage($donnees['telephone'], $message);
+        $smsSent = true;
+      } catch (\Exception $e) {
+        $smsError = $e->getMessage();
+        error_log('Erreur lors de l\'envoi du SMS de bienvenue: ' . $smsError);
+      }
+
+      // Stocker le statut SMS dans la session pour affichage
+      if ($smsSent) {
+        $this->session->set('success_message', 'Compte créé avec succès ! Un SMS de confirmation a été envoyé.');
+      } else {
+        $this->session->set('warning_message', 'Compte créé avec succès, mais l\'envoi du SMS a échoué.');
+      }
+
+      // Connecter automatiquement l'utilisateur et rediriger
+      $this->handleSuccessfulLogin($user);
       header('Location:' . BASE_URL . 'compte');
       exit();
     } else {
-      $this->session->set('errors', ['registration' => ["Échec de l'inscription. Veuillez réessayer."]]);
+      // Échec de l'inscription - utiliser les validators
+      $this->session->set('errors', ['registration' => ["Échec de l'inscription. Veuillez vérifier vos informations et réessayer."]]);
       parent::renderHTML('utilisateur/inscription.html.php');
     }
   }
