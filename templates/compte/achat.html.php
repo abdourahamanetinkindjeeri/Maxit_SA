@@ -360,7 +360,16 @@
         }
 
         function printRecu() {
-            const recuContent = document.getElementById("recu-popup").querySelector(".p-6").innerHTML;
+            // Récupérer les données du reçu
+            const client = document.getElementById("client").textContent;
+            const compteur = document.getElementById("compteur_recu").textContent;
+            const reference = document.getElementById("reference").textContent;
+            const code = document.getElementById("code").textContent;
+            const nbreKwt = document.getElementById("nbreKwt").textContent;
+            const date = document.getElementById("date").textContent;
+            const tranche = document.getElementById("tranche").textContent;
+            const prix = document.getElementById("prix").textContent;
+
             const printWindow = window.open("", "_blank", "width=600,height=800");
 
             printWindow.document.write(`
@@ -376,35 +385,137 @@
                             max-width: 500px; 
                             margin: 0 auto;
                             line-height: 1.6;
+                            background: white;
                         }
-                        h1 {
+                        .header {
                             text-align: center;
-                            color: #1f2937;
                             margin-bottom: 30px;
-                            border-bottom: 2px solid #3b82f6;
-                            padding-bottom: 10px;
+                            border-bottom: 3px solid #10b981;
+                            padding-bottom: 15px;
                         }
-                        .recu-content p { 
-                            margin: 15px 0; 
+                        .header h1 {
+                            color: #10b981;
+                            margin: 0;
+                            font-size: 24px;
+                            font-weight: bold;
+                        }
+                        .header p {
+                            color: #6b7280;
+                            margin: 5px 0 0 0;
                             font-size: 14px;
                         }
-                        .recu-content strong { 
-                            color: #374151; 
-                            display: inline-block;
-                            min-width: 140px;
+                        .success-box {
+                            background: #d1fae5;
+                            border: 1px solid #10b981;
+                            border-radius: 8px;
+                            padding: 15px;
+                            margin-bottom: 25px;
+                            text-align: center;
                         }
-                        .recu-content span {
+                        .success-box .icon {
+                            color: #10b981;
+                            font-size: 20px;
+                            margin-right: 8px;
+                        }
+                        .success-box .text {
+                            color: #065f46;
+                            font-weight: bold;
+                        }
+                        .details {
+                            background: #f9fafb;
+                            border: 1px solid #e5e7eb;
+                            border-radius: 8px;
+                            padding: 20px;
+                        }
+                        .detail-row {
+                            display: flex;
+                            justify-content: space-between;
+                            margin-bottom: 12px;
+                            padding-bottom: 8px;
+                            border-bottom: 1px solid #f3f4f6;
+                        }
+                        .detail-row:last-child {
+                            border-bottom: none;
+                            margin-bottom: 0;
+                        }
+                        .detail-label {
+                            font-weight: bold;
+                            color: #374151;
+                            min-width: 120px;
+                        }
+                        .detail-value {
                             color: #6b7280;
+                            text-align: right;
+                            flex: 1;
+                        }
+                        .footer {
+                            margin-top: 30px;
+                            text-align: center;
+                            color: #6b7280;
+                            font-size: 12px;
+                            border-top: 1px solid #e5e7eb;
+                            padding-top: 15px;
                         }
                         @media print {
-                            body { padding: 20px; }
-                            h1 { font-size: 18px; }
+                            body { 
+                                padding: 20px; 
+                                background: white;
+                            }
+                            .header h1 { font-size: 20px; }
+                            .details { background: white; }
                         }
                     </style>
                 </head>
                 <body>
-                    <h1>Reçu d'achat Woyofal</h1>
-                    <div class="recu-content">${recuContent}</div>
+                    <div class="header">
+                        <h1>Reçu d'achat Woyofal</h1>
+                        <p>Paiement de facture d'électricité</p>
+                    </div>
+                    
+                    <div class="success-box">
+                        <span class="icon">✓</span>
+                        <span class="text">Transaction effectuée avec succès</span>
+                    </div>
+                    
+                    <div class="details">
+                        <div class="detail-row">
+                            <span class="detail-label">Client:</span>
+                            <span class="detail-value">${client}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Compteur:</span>
+                            <span class="detail-value">${compteur}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Référence:</span>
+                            <span class="detail-value">${reference}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Code recharge:</span>
+                            <span class="detail-value">${code}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">KWT achetés:</span>
+                            <span class="detail-value">${nbreKwt}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Date:</span>
+                            <span class="detail-value">${date}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Tranche:</span>
+                            <span class="detail-value">${tranche}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Prix unitaire:</span>
+                            <span class="detail-value">${prix}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>Merci d'avoir utilisé Maxitsa pour votre paiement Woyofal</p>
+                        <p>Ce reçu fait foi de paiement</p>
+                    </div>
                 </body>
                 </html>
             `);
@@ -415,7 +526,7 @@
             setTimeout(() => {
                 printWindow.print();
                 printWindow.close();
-            }, 250);
+            }, 500);
         }
 
         // Fermer les popups en cliquant sur l'overlay
